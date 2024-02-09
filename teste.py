@@ -37,7 +37,7 @@ def send_ping(peer_address):
             
         else:
             peer_status[peer_address[0]].append(message_data["id"])
-            
+
     except socket.timeout:
         peer_status[peer_address] = "offline"
     except Exception as e:
@@ -46,7 +46,8 @@ def send_ping(peer_address):
 def send_all_ping():
     while True:
         for peer_address in peer_addresses:
-            send_ping(peer_address)
+            if peer_address != my_info:
+                send_ping(peer_address)
         time.sleep(5)  # Verificar o status dos pares a cada 5 segundos
 
 def check_status():
@@ -56,8 +57,11 @@ def check_status():
         message = pong[1]
         id = message["id"]
         peer_status[addr[0]].remove(id)
-        print(peer_status)
+        
+        if len(peer_status[addr[0]]) > 3:
+            peer_status.pop(addr[0])
         time.sleep(1)
+        print(peer_status)
 
 # Função para sincronizar mensagens
 # def start_sync():
