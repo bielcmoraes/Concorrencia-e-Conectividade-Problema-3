@@ -4,6 +4,7 @@ import os
 import platform
 import json
 import time
+import uuid
 from queue import Queue
 from lamport_clock import LamportClock
 
@@ -18,30 +19,31 @@ all_messages = []
 OPERATION_NUMBER = 5
 
 # Função para verificar se um par está online ou offline
-def check_peer_status(peer_address):
+def send_ping(peer_address):
     try:
-        
         message_data = {
-            "message_type": "Ping"
+            "message_type": "Ping",
+            "id": uuid.uuid4()
         }
         message_json = json.dumps(message_data)
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
         send_pacote(encrypted_message)
     except socket.timeout:
         peer_status[peer_address] = "offline"
-        print(peer_address, "offline")
     except Exception as e:
         print(f"Erro ao verificar o status do par {peer_address}: {e}")
 
-def check_all_peer_status():
+def send_all_ping():
     while True:
         for peer_address in peer_addresses:
-            check_peer_status(peer_address)
+            send_ping(peer_address)
         time.sleep(5)  # Verificar o status dos pares a cada 5 segundos
+
+def check_status(peer_status):
 
 
 # Função para sincronizar mensagens
-def start_sync():
+# def start_sync():
 
     # Gere um novo ID de mensagem
     message_id = lamport_clock.get_time()
@@ -135,65 +137,71 @@ def order_packages():
         addr = package_received[0]
         data = package_received[1]
 
-        try:
-            data_decrypt = decrypt_message(data.decode("utf-8"), OPERATION_NUMBER)
+        # try:
+        data_decrypt = decrypt_message(data.decode("utf-8"), OPERATION_NUMBER)
 
-            if data_decrypt:
-                # Desserializar a mensagem JSON
-                message_data = json.loads(data_decrypt)
+        if data_decrypt:
+            # Desserializar a mensagem JSON
+            message_data = json.loads(data_decrypt)
 
-                if "message_type" in message_data:
-                    message_type = message_data["message_type"]
+            if "message_type" in message_data:
+                message_type = message_data["message_type"]
+                
+                if message_type == "Ping":
+
+                    # Atualize o status para online
+                    peer_on_exists = peer_status.get(addr[0])
+
+                    if not peer_on_exists:
+                        peer_status[addr[0]] = [message_data["id"]]
+                    else:
+                        peer_status[addr[0]].append(message_data["id"])
                     
-                    if message_type == "Ping":
+                    print(peer_status)
+                    
+                    # Crie um dicionário para a mensagem em formato JSON
+                    message_data = {
+                        "message_type": "Pong",
+                        "id": message_data["id"]
+                    }
 
-                        # Atualize o status para online
-                        peer_status[addr[0]] = "online"
+                    # Serializar a mensagem em JSON
+                    message_json = json.dumps(message_data)
 
-                        message =  message_data["message"]
-                        
-                        # Crie um dicionário para a mensagem em formato JSON
-                        message_data = {
-                            "message_type": "Pong"
-                        }
+                    encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
 
-                        # Serializar a mensagem em JSON
-                        message_json = json.dumps(message_data)
+                    # Envie um pong
+                    send_pacote(encrypted_message)
 
-                        encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
+                elif message_type == "Pong":
+                    # Atualize o status para online
+                    peer_status[addr[0]] = "online"
 
-                        # Envie um pong
-                        send_pacote(encrypted_message)
+                elif message_type == "Message":
+                    # {'message_type': 'Message', 'message_id': ['192.168.43.107', 9], 'text': 'fala tu'}
+                    if "message_id" in message_data and "text" in message_data:
+                        message_id = message_data["message_id"]
 
-                    elif message_type == "Pong":
-                        # Atualize o status para online
-                        peer_status[addr[0]] = "online"
-
-                    elif message_type == "Message":
-                        # {'message_type': 'Message', 'message_id': ['192.168.43.107', 9], 'text': 'fala tu'}
-                        if "message_id" in message_data and "text" in message_data:
-                            message_id = message_data["message_id"]
-
-                            # Adicione a mensagem à lista de mensagens
-                            if ((message_id[0], message_data)) not in all_messages:
-                                all_messages.append((message_id[0], message_data))  # Tupla com endereço/porta e mensagem
-                                lamport_clock.update(message_id[1])
-                                
-                    elif message_type == "Sync":
+                        # Adicione a mensagem à lista de mensagens
+                        if ((message_id[0], message_data)) not in all_messages:
+                            all_messages.append((message_id[0], message_data))  # Tupla com endereço/porta e mensagem
+                            lamport_clock.update(message_id[1])
                             
-                            if "message_id" in message_data and "text" in message_data:
-                                text_sync = message_data["text"]
-                                if "Start sync" in text_sync:  # Envia a lista de pares atualizada e a lista de mensagens
+                elif message_type == "Sync":
+                        
+                        if "message_id" in message_data and "text" in message_data:
+                            text_sync = message_data["text"]
+                            if "Start sync" in text_sync:  # Envia a lista de pares atualizada e a lista de mensagens
 
-                                # Id da lista de mensagens que será enviada                                
-                                    # Envie a lista de mensagens atual
-                                    for message in all_messages:
-                                        message_json = json.dumps(message[1])
-                                        message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
-                                        send_pacote(message_encrypted)
+                            # Id da lista de mensagens que será enviada                                
+                                # Envie a lista de mensagens atual
+                                for message in all_messages:
+                                    message_json = json.dumps(message[1])
+                                    message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
+                                    send_pacote(message_encrypted)
    
-        except Exception as e:
-            print("Erro ao ordenar pacotes: ", e)
+        # except Exception as e:
+        #     print("Erro ao ordenar pacotes: ", e)
 
 def order_messages(messages):
     # Utilize a função sorted do Python, fornecendo a função de ordenação com base no carimbo de tempo e, em caso de empate, no maior valor em messages[0]
@@ -239,9 +247,9 @@ def main():
             order_packages_thread.daemon = True
             order_packages_thread.start()
 
-            check_status_thread = threading.Thread(target=check_all_peer_status)
-            check_status_thread.daemon = True
-            check_status_thread.start()
+            send_ping_thread = threading.Thread(target=send_all_ping)
+            send_ping_thread.daemon = True
+            send_ping_thread.start()
 
             # clear_terminal()
 
