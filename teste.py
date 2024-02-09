@@ -9,7 +9,7 @@ from lamport_clock import LamportClock
 
 # peer_addresses = [("172.16.103.1", 5555), ("172.16.103.2", 5555), ("172.16.103.3", 5555), ("172.16.103.4", 5555), ("172.16.103.5", 5555), ("172.16.103.6", 5555), ("172.16.103.7", 5555), ("172.16.103.8", 5555), ("172.16.103.9", 5555), ("172.16.103.10", 5555), ("172.16.103.11", 5555), ("172.16.103.12", 5555), ("172.16.103.13", 5555), ("172.16.103.14", 5555)]
 peer_addresses = [("192.168.0.121", 5555), ("192.168.0.110", 5555)]
-peer_status = {peer: "offline" for peer in peer_addresses}
+peer_status = {}
 received_packets = Queue()
 lamport_clock = LamportClock()
 my_info = (None, None)
@@ -18,21 +18,15 @@ all_messages = []
 OPERATION_NUMBER = 5
 
 # Função para verificar se um par está online ou offline
-def check_peer_status(peer_address, timeout=5):
+def check_peer_status(peer_address):
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(timeout)
+        
         message_data = {
-            "message_type": "Ping",
-            "message": "Response"
+            "message_type": "Ping"
         }
         message_json = json.dumps(message_data)
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-        sock.sendto(encrypted_message.encode(), peer_address)
-        data, addr = sock.recvfrom(1024)
-        peer_status[peer_address] = "online"
-        print(addr, "online")
-        sock.close()
+        send_pacote(encrypted_message)
     except socket.timeout:
         peer_status[peer_address] = "offline"
         print(peer_address, "offline")
@@ -152,20 +146,28 @@ def order_packages():
                     message_type = message_data["message_type"]
                     
                     if message_type == "Ping":
-                    # {'message_type': 'Ping', 'message': 'Request'}
+
+                        # Atualize o status para online
+                        peer_status[addr[0]] = "online"
+
                         message =  message_data["message"]
-                        if message == "Request":
-                            # Crie um dicionário para a mensagem em formato JSON
-                            message_data = {
-                                "message_type": "Ping",
-                                "message": "Response"
-                            }
+                        
+                        # Crie um dicionário para a mensagem em formato JSON
+                        message_data = {
+                            "message_type": "Pong"
+                        }
 
-                            # Serializar a mensagem em JSON
-                            message_json = json.dumps(message_data)
+                        # Serializar a mensagem em JSON
+                        message_json = json.dumps(message_data)
 
-                            encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-                            send_pacote(encrypted_message)
+                        encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
+
+                        # Envie um pong
+                        send_pacote(encrypted_message)
+
+                    elif message_type == "Pong":
+                        # Atualize o status para online
+                        peer_status[addr[0]] = "online"
 
                     elif message_type == "Message":
                         # {'message_type': 'Message', 'message_id': ['192.168.43.107', 9], 'text': 'fala tu'}
