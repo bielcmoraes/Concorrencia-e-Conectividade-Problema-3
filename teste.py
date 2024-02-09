@@ -9,7 +9,7 @@ from lamport_clock import LamportClock
 
 # peer_addresses = [("172.16.103.1", 5555), ("172.16.103.2", 5555), ("172.16.103.3", 5555), ("172.16.103.4", 5555), ("172.16.103.5", 5555), ("172.16.103.6", 5555), ("172.16.103.7", 5555), ("172.16.103.8", 5555), ("172.16.103.9", 5555), ("172.16.103.10", 5555), ("172.16.103.11", 5555), ("172.16.103.12", 5555), ("172.16.103.13", 5555), ("172.16.103.14", 5555)]
 peer_addresses = [("192.168.0.121", 5555), ("192.168.0.121", 6666), ("192.168.0.121", 7777)]
-peer_onlines = {("192.168.0.121", 5555): "off", ("192.168.0.121", 6666): "off", ("192.168.0.121", 7777): "off"}
+peer_status = {peer: "offline" for peer in peer_addresses}
 received_packets = Queue()
 lamport_clock = LamportClock()
 my_info = (None, None)
@@ -18,43 +18,37 @@ all_messages = []
 OPERATION_NUMBER = 5
 
 # Função para verificar se um par está online ou offline
-def check_peer_online(peer_address, timeout=5):
+# Função para verificar o status dos pares
+def check_peer_status(peer_address, timeout=5):
     try:
-        # Criar um socket UDP
+        # Crie um socket UDP
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(timeout)  # Definir o tempo limite para a resposta
-
-        # Enviar uma mensagem para o par
-        message_data = {
-            "message_type": "Ping",
-            "message": "Request"
-        }
-        message_json = json.dumps(message_data)
-        encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-        sock.sendto(encrypted_message.encode(), peer_address)
-
-        # Esperar por uma resposta
+        sock.settimeout(timeout)
+        
+        # Envie uma mensagem de teste para o par
+        sock.sendto(b"ping", peer_address)
+        
+        # Espere por uma resposta
         data, addr = sock.recvfrom(1024)
-        data_decrypt = decrypt_message(data.decode("utf-8"), OPERATION_NUMBER)
-        message_data = json.loads(data_decrypt)
-
-        if message_data["message"] == "Response":
-            peer_onlines[peer_address] = "on"
-        else:
-            peer_onlines[peer_address] = "off"
-
-        # Fechar o socket
+        
+        # Se receber uma resposta, o par está online
+        peer_status[peer_address] = "online"
+        
+        # Feche o socket
         sock.close()
     except socket.timeout:
-        # Se o tempo limite foi atingido, considerar o par como offline
-        peer_onlines[peer_address] = "off"
+        # Se não receber uma resposta dentro do tempo limite, considere o par offline
+        peer_status[peer_address] = "offline"
+    except Exception as e:
+        print(f"Erro ao verificar o status do par {peer_address}: {e}")
 
-# Função para verificar o status online de todos os pares
-def check_all_peers_online():
+# Função para verificar o status de todos os pares
+def check_all_peer_status():
     while True:
         for peer_address in peer_addresses:
-            check_peer_online(peer_address)
-        time.sleep(2)  # Aguardar um tempo antes de verificar novamente
+            check_peer_status(peer_address)
+        time.sleep(5)  # Verifique o status dos pares a cada 5 segundos
+
 
 # Função para sincronizar mensagens
 def start_sync():
@@ -248,7 +242,7 @@ def main():
             order_packages_thread.start()
 
             # Iniciar a thread para verificar o status online dos pares
-            check_online_thread = threading.Thread(target=check_all_peers_online)
+            check_online_thread = threading.Thread(target=check_all_peer_status)
             check_online_thread.daemon = True
             check_online_thread.start()
 
