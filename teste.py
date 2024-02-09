@@ -18,46 +18,32 @@ all_messages = []
 OPERATION_NUMBER = 5
 
 # Função para verificar se um par está online ou offline
-# Função para verificar o status dos pares
 def check_peer_status(peer_address, timeout=5):
     try:
-        # Crie um socket UDP
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(timeout)
-        # Crie um dicionário para a mensagem em formato JSON
         message_data = {
             "message_type": "Ping",
             "message": "Response"
         }
-
-        # Serializar a mensagem em JSON
         message_json = json.dumps(message_data)
-
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-        
-        # Envie uma mensagem de teste para o par
         sock.sendto(encrypted_message.encode(), peer_address)
-        
-        # Espere por uma resposta
         data, addr = sock.recvfrom(1024)
-        
-        # Se receber uma resposta, o par está online
         peer_status[peer_address] = "online"
-        
-        # Feche o socket
+        print(addr, "online")
         sock.close()
     except socket.timeout:
-        # Se não receber uma resposta dentro do tempo limite, considere o par offline
         peer_status[peer_address] = "offline"
+        print(peer_address, "offline")
     except Exception as e:
         print(f"Erro ao verificar o status do par {peer_address}: {e}")
 
-# Função para verificar o status de todos os pares
 def check_all_peer_status():
     while True:
         for peer_address in peer_addresses:
             check_peer_status(peer_address)
-        time.sleep(5)  # Verifique o status dos pares a cada 5 segundos
+        time.sleep(5)  # Verificar o status dos pares a cada 5 segundos
 
 
 # Função para sincronizar mensagens
@@ -251,10 +237,9 @@ def main():
             order_packages_thread.daemon = True
             order_packages_thread.start()
 
-            # Iniciar a thread para verificar o status online dos pares
-            check_online_thread = threading.Thread(target=check_all_peer_status)
-            check_online_thread.daemon = True
-            check_online_thread.start()
+            check_status_thread = threading.Thread(target=check_all_peer_status)
+            check_status_thread.daemon = True
+            check_status_thread.start()
 
             # clear_terminal()
 
