@@ -61,7 +61,7 @@ def check_status():
         if len(peer_status[addr[0]]) > 3:
             peer_status.pop(addr[0])
         time.sleep(1)
-        print(peer_status)
+        print("Pares Online:", peer_status.keys())
 
 # Função para sincronizar mensagens
 # def start_sync():
