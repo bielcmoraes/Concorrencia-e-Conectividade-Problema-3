@@ -11,6 +11,7 @@ from lamport_clock import LamportClock
 # peer_addresses = [("172.16.103.1", 5555), ("172.16.103.2", 5555), ("172.16.103.3", 5555), ("172.16.103.4", 5555), ("172.16.103.5", 5555), ("172.16.103.6", 5555), ("172.16.103.7", 5555), ("172.16.103.8", 5555), ("172.16.103.9", 5555), ("172.16.103.10", 5555), ("172.16.103.11", 5555), ("172.16.103.12", 5555), ("172.16.103.13", 5555), ("172.16.103.14", 5555)]
 peer_addresses = [("192.168.0.121", 5555), ("192.168.0.110", 5555)]
 peer_status = {}
+pongs = Queue()
 received_packets = Queue()
 lamport_clock = LamportClock()
 my_info = (None, None)
@@ -28,6 +29,15 @@ def send_ping(peer_address):
         message_json = json.dumps(message_data)
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
         send_pacote(encrypted_message)
+
+        peer_on_exists = peer_status.get(peer_address[0])
+                    
+        if not peer_on_exists:
+            peer_status[peer_address[0]] = [message_data["id"]]
+            
+        else:
+            peer_status[peer_address[0]].append(message_data["id"])
+            
     except socket.timeout:
         peer_status[peer_address] = "offline"
     except Exception as e:
@@ -39,28 +49,35 @@ def send_all_ping():
             send_ping(peer_address)
         time.sleep(5)  # Verificar o status dos pares a cada 5 segundos
 
-def check_status(peer_status):
-
+def check_status():
+    while True:
+        pong = pongs.get()
+        addr = pong[0]
+        message = pong[1]
+        id = message["id"]
+        peer_status[addr[0]].remove(id)
+        print(peer_status)
+        time.sleep(1)
 
 # Função para sincronizar mensagens
 # def start_sync():
 
-    # Gere um novo ID de mensagem
-    message_id = lamport_clock.get_time()
+#     # Gere um novo ID de mensagem
+#     message_id = lamport_clock.get_time()
 
-    # Crie um dicionário para a mensagem em formato JSON
-    message_data = {
-        "message_type": "Sync",
-        "message_id": [my_info[0], message_id],
-        "text": "Start sync."
-    }
+#     # Crie um dicionário para a mensagem em formato JSON
+#     message_data = {
+#         "message_type": "Sync",
+#         "message_id": [my_info[0], message_id],
+#         "text": "Start sync."
+#     }
 
-    # Serializar a mensagem em JSON
-    message_json = json.dumps(message_data)
+#     # Serializar a mensagem em JSON
+#     message_json = json.dumps(message_data)
 
-    encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-    # Enviar a mensagem para todos os pares
-    send_pacote(encrypted_message)
+#     encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
+#     # Enviar a mensagem para todos os pares
+#     send_pacote(encrypted_message)
 
 # Função para solicitar sincronização a cada "X" tempo
 def time_sync():
@@ -146,15 +163,6 @@ def order_packages():
                 message_type = message_data["message_type"]
                 
                 if message_type == "Ping":
-                    peer_on_exists = peer_status.get(addr[0])
-                    
-                    if not peer_on_exists:
-                        peer_status[addr[0]] = [message_data["id"]]
-                        
-                    else:
-                        peer_status[addr[0]].append(message_data["id"])
-                    
-                    print(peer_status)
                     
                     message_data = {
                         "message_type": "Pong",
@@ -167,14 +175,7 @@ def order_packages():
                     send_pacote(encrypted_message)
 
                 elif message_type == "Pong":
-
-                    peer_on_exists = peer_status.get(addr[0])
-                    if peer_on_exists:
-                        peer_status[addr[0]].remove(message_data["id"])
-                        print("GG", peer_status)
-
-
-
+                    pongs.put((addr, message_data))
 
                 elif message_type == "Message":
                     if "message_id" in message_data and "text" in message_data:
@@ -243,6 +244,10 @@ def main():
             send_ping_thread = threading.Thread(target=send_all_ping)
             send_ping_thread.daemon = True
             send_ping_thread.start()
+
+            check_status_thread = threading.Thread(target=check_status)
+            check_status_thread.daemon = True
+            check_status_thread.start()
 
             # clear_terminal()
 
