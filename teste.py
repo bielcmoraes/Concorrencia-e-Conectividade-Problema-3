@@ -24,9 +24,19 @@ def check_peer_status(peer_address, timeout=5):
         # Crie um socket UDP
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(timeout)
+        # Crie um dicionário para a mensagem em formato JSON
+        message_data = {
+            "message_type": "Ping",
+            "message": "Response"
+        }
+
+        # Serializar a mensagem em JSON
+        message_json = json.dumps(message_data)
+
+        encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
         
         # Envie uma mensagem de teste para o par
-        sock.sendto(b"ping", peer_address)
+        sock.sendto(encrypted_message.encode(), peer_address)
         
         # Espere por uma resposta
         data, addr = sock.recvfrom(1024)
