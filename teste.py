@@ -23,7 +23,7 @@ def send_ping(peer_address):
     try:
         message_data = {
             "message_type": "Ping",
-            "id": uuid.uuid4()
+            "id": str(uuid.uuid4())
         }
         message_json = json.dumps(message_data)
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
