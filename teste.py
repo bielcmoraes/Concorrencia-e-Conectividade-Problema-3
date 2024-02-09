@@ -131,7 +131,6 @@ def send_messages():
             lamport_clock.increment()
 
 def order_packages():
-    
     while True:
         package_received = received_packets.get()
         addr = package_received[0]
@@ -141,67 +140,61 @@ def order_packages():
         data_decrypt = decrypt_message(data.decode("utf-8"), OPERATION_NUMBER)
 
         if data_decrypt:
-            # Desserializar a mensagem JSON
             message_data = json.loads(data_decrypt)
 
             if "message_type" in message_data:
                 message_type = message_data["message_type"]
                 
                 if message_type == "Ping":
-
-                    # Atualize o status para online
                     peer_on_exists = peer_status.get(addr[0])
-
+                    
                     if not peer_on_exists:
                         peer_status[addr[0]] = [message_data["id"]]
+                        
                     else:
                         peer_status[addr[0]].append(message_data["id"])
                     
                     print(peer_status)
                     
-                    # Crie um dicionário para a mensagem em formato JSON
                     message_data = {
                         "message_type": "Pong",
                         "id": message_data["id"]
                     }
 
-                    # Serializar a mensagem em JSON
                     message_json = json.dumps(message_data)
 
                     encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-
-                    # Envie um pong
                     send_pacote(encrypted_message)
 
                 elif message_type == "Pong":
-                    # Atualize o status para online
-                    peer_status[addr[0]] = "online"
+
+                    peer_on_exists = peer_status.get(addr[0])
+                    if peer_on_exists:
+                        peer_status[addr[0]].remove(message_data["id"])
+                        print("GG", peer_status)
+
+
+
 
                 elif message_type == "Message":
-                    # {'message_type': 'Message', 'message_id': ['192.168.43.107', 9], 'text': 'fala tu'}
                     if "message_id" in message_data and "text" in message_data:
                         message_id = message_data["message_id"]
 
-                        # Adicione a mensagem à lista de mensagens
                         if ((message_id[0], message_data)) not in all_messages:
-                            all_messages.append((message_id[0], message_data))  # Tupla com endereço/porta e mensagem
+                            all_messages.append((message_id[0], message_data))
                             lamport_clock.update(message_id[1])
-                            
+                                
                 elif message_type == "Sync":
-                        
-                        if "message_id" in message_data and "text" in message_data:
-                            text_sync = message_data["text"]
-                            if "Start sync" in text_sync:  # Envia a lista de pares atualizada e a lista de mensagens
-
-                            # Id da lista de mensagens que será enviada                                
-                                # Envie a lista de mensagens atual
-                                for message in all_messages:
-                                    message_json = json.dumps(message[1])
-                                    message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
-                                    send_pacote(message_encrypted)
-   
+                    if "message_id" in message_data and "text" in message_data:
+                        text_sync = message_data["text"]
+                        if "Start sync" in text_sync:
+                            for message in all_messages:
+                                message_json = json.dumps(message[1])
+                                message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
+                                send_pacote(message_encrypted)
         # except Exception as e:
         #     print("Erro ao ordenar pacotes: ", e)
+
 
 def order_messages(messages):
     # Utilize a função sorted do Python, fornecendo a função de ordenação com base no carimbo de tempo e, em caso de empate, no maior valor em messages[0]
