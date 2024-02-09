@@ -39,7 +39,7 @@ def send_ping(peer_address):
             peer_status[peer_address[0]].append(message_data["id"])
 
     except socket.timeout:
-        peer_status[peer_address] = "offline"
+        pass
     except Exception as e:
         print(f"Erro ao verificar o status do par {peer_address}: {e}")
 
@@ -199,7 +199,6 @@ def order_packages():
                                 send_pacote(message_encrypted)
         # except Exception as e:
         #     print("Erro ao ordenar pacotes: ", e)
-
 
 def order_messages(messages):
     # Utilize a função sorted do Python, fornecendo a função de ordenação com base no carimbo de tempo e, em caso de empate, no maior valor em messages[0]
