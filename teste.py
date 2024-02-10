@@ -11,6 +11,7 @@ from lamport_clock import LamportClock
 # peer_addresses = [("172.16.103.1", 5555), ("172.16.103.2", 5555), ("172.16.103.3", 5555), ("172.16.103.4", 5555), ("172.16.103.5", 5555), ("172.16.103.6", 5555), ("172.16.103.7", 5555), ("172.16.103.8", 5555), ("172.16.103.9", 5555), ("172.16.103.10", 5555), ("172.16.103.11", 5555), ("172.16.103.12", 5555), ("172.16.103.13", 5555), ("172.16.103.14", 5555)]
 peer_addresses = [("192.168.0.121", 5555), ("192.168.0.110", 5555)]
 peer_status = {}
+acks = {}
 pongs = Queue()
 received_packets = Queue()
 lamport_clock = LamportClock()
@@ -64,24 +65,24 @@ def check_status():
         print("Pares Online:", peer_status.keys())
 
 # Função para sincronizar mensagens
-# def start_sync():
+def start_sync():
 
-#     # Gere um novo ID de mensagem
-#     message_id = lamport_clock.get_time()
+    # Gere um novo ID de mensagem
+    message_id = lamport_clock.get_time()
 
-#     # Crie um dicionário para a mensagem em formato JSON
-#     message_data = {
-#         "message_type": "Sync",
-#         "message_id": [my_info[0], message_id],
-#         "text": "Start sync."
-#     }
+    # Crie um dicionário para a mensagem em formato JSON
+    message_data = {
+        "message_type": "Sync",
+        "message_id": [my_info[0], message_id],
+        "text": "Start sync."
+    }
 
-#     # Serializar a mensagem em JSON
-#     message_json = json.dumps(message_data)
+    # Serializar a mensagem em JSON
+    message_json = json.dumps(message_data)
 
-#     encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-#     # Enviar a mensagem para todos os pares
-#     send_pacote(encrypted_message)
+    encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
+    # Enviar a mensagem para todos os pares
+    send_pacote(encrypted_message)
 
 # Função para solicitar sincronização a cada "X" tempo
 def time_sync():
@@ -134,7 +135,8 @@ def send_messages():
         message_data = {
             "message_type": "Message",
             "message_id": [my_info[0], message_id],
-            "text": message_text
+            "text": message_text,
+            "ack_requested": True
         }
 
         # Serializar a mensagem em JSON
@@ -188,6 +190,28 @@ def order_packages():
                         if ((message_id[0], message_data)) not in all_messages:
                             all_messages.append((message_id[0], message_data))
                             lamport_clock.update(message_id[1])
+                        
+                        ack_data = {
+                            "message_type": "Ack",
+                            "message_id": message_id
+                        }
+                        ack_json = json.dumps(ack_data)
+                        encrypted_ack = encrypt_message(ack_json, OPERATION_NUMBER)
+                        send_pacote(encrypted_ack)
+                
+                elif message_type == "Ack":
+                    # Remova a mensagem da lista de mensagens enviadas pendentes
+                    if "message_id" in message_data:
+                        message_id = message_data["message_id"]
+                        
+                        ack_key_exists = acks.get(message_id)
+                    
+                        if not ack_key_exists:
+                            acks[message_id] = [addr]
+                            
+                        else:
+                            acks[message_id].append(addr)
+
                                 
                 elif message_type == "Sync":
                     if "message_id" in message_data and "text" in message_data:
@@ -275,7 +299,6 @@ def main():
                     exit()
     except socket.timeout:
         pass
-
 
 if __name__ == "__main__":
     main()
