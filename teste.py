@@ -222,6 +222,7 @@ def order_packages():
                         
                         else:
                             confirmed_messages.append(message_data) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
+                            print("MSG ADD SEM ACK")
                             lamport_clock.update(message_id[1])
                 
                 elif message_type == "Ack":
@@ -251,8 +252,9 @@ def order_packages():
                         text_sync = message_data["text"]
                         if "Start sync" in text_sync:
                             for message in all_messages:
-                                message["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
+                                message[1]["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
                                 message_json = json.dumps(message[1])
+                                print("MSG SYNCK ENV")
                                 message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
                                 send_pacote(message_encrypted)
         # except Exception as e:
