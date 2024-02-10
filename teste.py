@@ -243,7 +243,8 @@ def order_packages():
                         message_id = message[1]["message_id"]
                         
                         if str(confirmed_id) == str(message_id):
-                            print("PASSOUuuuuuuuuuuuuuuuuuuuuuuuuuuuuu")
+                            confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
+                            all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
                                 
                 elif message_type == "Sync":
                     if "message_id" in message_data and "text" in message_data:
@@ -264,7 +265,7 @@ def order_messages(messages):
 
 def read_messages():
     
-    all_messages_sorted = order_messages(all_messages)
+    all_messages_sorted = order_messages(confirmed_messages)
     print("\nTodas as mensagens: ")
     for message_data in all_messages_sorted:
         address = message_data[0]
