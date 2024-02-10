@@ -182,8 +182,7 @@ def order_packages():
 
         if data_decrypt:
             message_data = json.loads(data_decrypt)
-            print(message_data)
-
+            
             if "message_type" in message_data:
                 message_type = message_data["message_type"]
                 
@@ -209,6 +208,7 @@ def order_packages():
                         ack_requested = message_data["ack_requested"]
 
                         if ack_requested:
+                            print(message_data)
                             if ((message_id[0], message_data)) not in all_messages:
                                 all_messages.append((message_id[0], message_data))
                                 lamport_clock.update(message_id[1])
