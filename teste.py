@@ -14,6 +14,7 @@ peer_status = {}
 acks = {}
 pongs = Queue()
 received_packets = Queue()
+processing_packets = Queue()
 lamport_clock = LamportClock()
 my_info = (None, None)
 all_messages = []
@@ -30,7 +31,8 @@ def send_ping(peer_address):
         }
         message_json = json.dumps(message_data)
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-        send_pacote(encrypted_message)
+        processing_packets.put(encrypted_message)
+        # send_pacote(encrypted_message)
 
         peer_on_exists = peer_status.get(peer_address[0])
                     
@@ -82,9 +84,8 @@ def remove_pending_messages():
                 }
                 confirmed_json = json.dumps(confirmed_data)
                 encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
-                send_pacote(encrypted_confirmed)
-                
-
+                processing_packets.put(encrypted_confirmed)
+                # send_pacote(encrypted_confirmed)               
 
 # Função para sincronizar mensagens
 def start_sync():
@@ -104,7 +105,8 @@ def start_sync():
 
     encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
     # Enviar a mensagem para todos os pares
-    send_pacote(encrypted_message)
+    processing_packets.put(encrypted_message)
+    # send_pacote(encrypted_message)
 
 # Função para solicitar sincronização a cada "X" tempo
 def time_sync():
@@ -143,6 +145,11 @@ def send_pacote(objMsg):
     finally:
         client_socket.close()
 
+def process_packet_queue():
+    while True:
+        package = processing_packets.get()
+        send_pacote(package)
+
 def send_messages():
     while True:
         message_text = input("Digite as mensagens (ou 'exit' para sair): ")
@@ -168,7 +175,8 @@ def send_messages():
         
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
         if encrypted_message:
-            send_pacote(encrypted_message)
+            processing_packets.put(encrypted_message)
+            # send_pacote(encrypted_message)
 
         message_save = (my_info[0], message_data)
         if message_save not in all_messages:
@@ -200,7 +208,8 @@ def order_packages():
                     message_json = json.dumps(message_data)
 
                     encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-                    send_pacote(encrypted_message)
+                    processing_packets.put(encrypted_message)
+                    # send_pacote(encrypted_message)
 
                 elif message_type == "Pong":
                     pongs.put((addr, message_data))
@@ -223,7 +232,8 @@ def order_packages():
                             }
                             ack_json = json.dumps(ack_data)
                             encrypted_ack = encrypt_message(ack_json, OPERATION_NUMBER)
-                            send_pacote(encrypted_ack)
+                            processing_packets.put(encrypted_ack)
+                            # send_pacote(encrypted_ack)
                         
                         else:
                             confirmed_messages.append((message_id[0], message_data)) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
@@ -254,7 +264,8 @@ def order_packages():
                         }
                         confirmed_json = json.dumps(confirmed_data)
                         encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
-                        send_pacote(encrypted_confirmed)
+                        processing_packets.put(encrypted_confirmed)
+                        # send_pacote(encrypted_confirmed)
 
                         if str(confirmed_id) == str(message_id):
                             confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
@@ -270,7 +281,8 @@ def order_packages():
                                 message_json = json.dumps(message[1])
                                 print("MSG SYNCK ENV")
                                 message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
-                                send_pacote(message_encrypted)
+                                processing_packets.put(message_encrypted)
+                                # send_pacote(message_encrypted)
         # except Exception as e:
         #     print("Erro ao ordenar pacotes: ", e)
 
@@ -315,6 +327,10 @@ def main():
             receive_thread = threading.Thread(target=receive_messages)
             receive_thread.daemon = True
             receive_thread.start()
+
+            process_packet_queue_thread = threading.Thread(target=process_packet_queue)
+            process_packet_queue_thread.daemon = True
+            process_packet_queue_thread.start()
 
             order_packages_thread = threading.Thread(target=order_packages)
             order_packages_thread.daemon = True
