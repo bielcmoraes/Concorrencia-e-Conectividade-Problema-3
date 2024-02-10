@@ -66,7 +66,7 @@ def check_status():
         
         if len(peer_status[addr[0]]) > 3:
             peer_status.pop(addr[0])
-        time.sleep(1)
+        time.sleep(0.4)
         # print("Pares Online:", peer_status.keys())
 
 def remove_pending_messages():
