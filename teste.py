@@ -244,6 +244,14 @@ def order_packages():
                         confirmed_id = message_data["message_id"]
                         message_id = message[1]["message_id"]
                         
+                        confirmed_data = {
+                            "message_type": "Confirmed",
+                            "message_id": message_id
+                        }
+                        confirmed_json = json.dumps(confirmed_data)
+                        encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
+                        send_pacote(encrypted_confirmed)
+
                         if str(confirmed_id) == str(message_id):
                             confirmed_messages.append((message_id[0], message_data)) # Adiciona a mensagem à lista de mensagens confirmadas
                             all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
@@ -270,6 +278,7 @@ def order_messages(messages):
 def read_messages():
     
     all_messages_sorted = order_messages(confirmed_messages)
+    print(all_messages_sorted)
     print("\nTodas as mensagens: ")
     for message_data in all_messages_sorted:
         address = message_data[0]
