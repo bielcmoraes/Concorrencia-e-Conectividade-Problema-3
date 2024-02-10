@@ -17,6 +17,7 @@ received_packets = Queue()
 lamport_clock = LamportClock()
 my_info = (None, None)
 all_messages = []
+confirmed_messages = []
 
 OPERATION_NUMBER = 5
 
@@ -62,7 +63,24 @@ def check_status():
         if len(peer_status[addr[0]]) > 3:
             peer_status.pop(addr[0])
         time.sleep(1)
-        print("Pares Online:", peer_status.keys())
+        # print("Pares Online:", peer_status.keys())
+
+def remove_pending_messages():
+
+    while True:
+        for message_id, acks_list in list(acks.items()):
+            all_confirmed = all(addr_id[0] in peer_status for addr_id in acks_list) #Verificar se os pares online confirmaram o recebimento da mensagem
+
+            if all_confirmed:
+                confirmed_data = {
+                    "message_type": "Confirmed",
+                    "message_id": list(message_id)
+                }
+                confirmed_json = json.dumps(confirmed_data)
+                encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
+                send_pacote(encrypted_confirmed)
+                
+
 
 # Função para sincronizar mensagens
 def start_sync():
@@ -211,6 +229,14 @@ def order_packages():
                             
                         else:
                             acks[str(message_id)].append(addr)
+                
+                elif message_type == "Confirmed":
+                    for message in all_messages:
+                        confirmed_id = message_data["message_id"]
+                        message_id = message["message_id"]
+                        if confirmed_id == message_id:
+                            print("ABC: ", message)
+                            print("DEF: ", confirmed_id)
                                 
                 elif message_type == "Sync":
                     if "message_id" in message_data and "text" in message_data:
@@ -274,6 +300,10 @@ def main():
             check_status_thread = threading.Thread(target=check_status)
             check_status_thread.daemon = True
             check_status_thread.start()
+
+            remove_pending_messages_thread = threading.Thread(target=remove_pending_messages)
+            remove_pending_messages_thread.daemon = True
+            remove_pending_messages_thread.start()
 
             # clear_terminal()
 
