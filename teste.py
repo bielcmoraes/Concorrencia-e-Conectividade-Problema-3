@@ -74,7 +74,7 @@ def remove_pending_messages():
             if all_confirmed:
                 confirmed_data = {
                     "message_type": "Confirmed",
-                    "message_id": list(message_id)
+                    "message_id": message_id
                 }
                 confirmed_json = json.dumps(confirmed_data)
                 encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
@@ -232,11 +232,12 @@ def order_packages():
                 
                 elif message_type == "Confirmed":
                     for message in all_messages:
+                        print("ABC: ", message)
                         confirmed_id = message_data["message_id"]
+                        print("DEF: ", confirmed_id)
                         message_id = message["message_id"]
                         if confirmed_id == message_id:
-                            print("ABC: ", message)
-                            print("DEF: ", confirmed_id)
+                            pass
                                 
                 elif message_type == "Sync":
                     if "message_id" in message_data and "text" in message_data:
