@@ -61,7 +61,7 @@ def check_status():
 
         try:
             peer_status[addr[0]].remove(id)
-        except ValueError:
+        except (KeyError, ValueError):
             pass
         
         if len(peer_status[addr[0]]) > 3:
