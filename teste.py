@@ -58,7 +58,11 @@ def check_status():
         addr = pong[0]
         message = pong[1]
         id = message["id"]
-        peer_status[addr[0]].remove(id)
+
+        try:
+            peer_status[addr[0]].remove(id)
+        except ValueError:
+            pass
         
         if len(peer_status[addr[0]]) > 3:
             peer_status.pop(addr[0])
