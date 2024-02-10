@@ -204,14 +204,13 @@ def order_packages():
                     if "message_id" in message_data:
                         message_id = message_data["message_id"]
                         
-                        ack_key_exists = acks.get(message_id)
+                        ack_key_exists = acks.get(str(message_id))
                     
                         if not ack_key_exists:
-                            acks[message_id] = [addr]
+                            acks[str(message_id)] = [addr]
                             
                         else:
-                            acks[message_id].append(addr)
-
+                            acks[str(message_id)].append(addr)
                                 
                 elif message_type == "Sync":
                     if "message_id" in message_data and "text" in message_data:
