@@ -182,6 +182,7 @@ def order_packages():
 
         if data_decrypt:
             message_data = json.loads(data_decrypt)
+            print(message_data)
 
             if "message_type" in message_data:
                 message_type = message_data["message_type"]
@@ -221,7 +222,7 @@ def order_packages():
                             send_pacote(encrypted_ack)
                         
                         else:
-                            confirmed_messages.append(message_data) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
+                            confirmed_messages.append((message_id[0], message_data)) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
                             print("MSG ADD SEM ACK")
                             lamport_clock.update(message_id[1])
                 
@@ -244,10 +245,11 @@ def order_packages():
                         message_id = message[1]["message_id"]
                         
                         if str(confirmed_id) == str(message_id):
-                            confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
+                            confirmed_messages.append((message_id[0], message_data)) # Adiciona a mensagem à lista de mensagens confirmadas
                             all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
                                 
                 elif message_type == "Sync":
+                    print("AAAAAAAAAAAAAAAAAAAA")
                     if "message_id" in message_data and "text" in message_data:
                         text_sync = message_data["text"]
                         if "Start sync" in text_sync:
@@ -295,6 +297,7 @@ def main():
     my_info = (my_ip, my_port)
 
     try:
+            
             # Iniciar a thread para receber mensagens 
             receive_thread = threading.Thread(target=receive_messages)
             receive_thread.daemon = True
@@ -303,6 +306,7 @@ def main():
             order_packages_thread = threading.Thread(target=order_packages)
             order_packages_thread.daemon = True
             order_packages_thread.start()
+
 
             send_ping_thread = threading.Thread(target=send_all_ping)
             send_ping_thread.daemon = True
