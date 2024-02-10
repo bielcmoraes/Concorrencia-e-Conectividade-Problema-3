@@ -202,20 +202,27 @@ def order_packages():
                     pongs.put((addr, message_data))
 
                 elif message_type == "Message":
-                    if "message_id" in message_data and "text" in message_data:
-                        message_id = message_data["message_id"]
 
-                        if ((message_id[0], message_data)) not in all_messages:
-                            all_messages.append((message_id[0], message_data))
-                            lamport_clock.update(message_id[1])
+                    if "message_id" in message_data and "text" in message_data and "ack_requested" in message_data:
+                        message_id = message_data["message_id"]
+                        ack_requested = message_data["ack_requested"]
+
+                        if ack_requested:
+                            if ((message_id[0], message_data)) not in all_messages:
+                                all_messages.append((message_id[0], message_data))
+                                lamport_clock.update(message_id[1])
                         
-                        ack_data = {
-                            "message_type": "Ack",
-                            "message_id": message_id
-                        }
-                        ack_json = json.dumps(ack_data)
-                        encrypted_ack = encrypt_message(ack_json, OPERATION_NUMBER)
-                        send_pacote(encrypted_ack)
+                            ack_data = {
+                                "message_type": "Ack",
+                                "message_id": message_id
+                            }
+                            ack_json = json.dumps(ack_data)
+                            encrypted_ack = encrypt_message(ack_json, OPERATION_NUMBER)
+                            send_pacote(encrypted_ack)
+                        
+                        else:
+                            confirmed_messages.append(message_data) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
+                            lamport_clock.update(message_id[1])
                 
                 elif message_type == "Ack":
                     # Remova a mensagem da lista de mensagens enviadas pendentes
@@ -232,18 +239,18 @@ def order_packages():
                 
                 elif message_type == "Confirmed":
                     for message in all_messages:
-                        print("ABC: ", message)
                         confirmed_id = message_data["message_id"]
-                        print("DEF: ", confirmed_id)
-                        message_id = message["message_id"]
-                        if confirmed_id == message_id:
-                            pass
+                        message_id = message[1]["message_id"]
+                        
+                        if str(confirmed_id) == str(message_id):
+                            print("PASSOUuuuuuuuuuuuuuuuuuuuuuuuuuuuuu")
                                 
                 elif message_type == "Sync":
                     if "message_id" in message_data and "text" in message_data:
                         text_sync = message_data["text"]
                         if "Start sync" in text_sync:
                             for message in all_messages:
+                                message["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
                                 message_json = json.dumps(message[1])
                                 message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
                                 send_pacote(message_encrypted)
@@ -308,6 +315,7 @@ def main():
 
             # clear_terminal()
 
+            start_sync()
             while True:
                 print("[1] Para enviar mensagens")
                 print("[2] Para visualizar mensagens")
