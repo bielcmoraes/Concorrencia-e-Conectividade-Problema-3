@@ -50,7 +50,7 @@ def send_all_ping():
         for peer_address in peer_addresses:
             if peer_address != my_info:
                 send_ping(peer_address)
-        time.sleep(5)  # Verificar o status dos pares a cada 5 segundos
+        time.sleep(2)  # Verificar o status dos pares a cada 5 segundos
 
 def check_status():
     while True:
