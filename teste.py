@@ -85,13 +85,7 @@ def remove_pending_messages():
                 confirmed_json = json.dumps(confirmed_data)
                 encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
                 # processing_packets.put(encrypted_confirmed)
-                send_pacote(encrypted_confirmed)
-
-                for message in all_messages:
-                    id = message[1]["message_id"]
-                    if str(message_id) == str(id):
-                        confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
-                        all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas               
+                send_pacote(encrypted_confirmed)      
 
 # Função para sincronizar mensagens
 def start_sync():
