@@ -89,7 +89,7 @@ def remove_pending_messages():
 
                 for message in all_messages:
                     id = message[1]["message_id"]
-                    if str(message_id) == str(id):
+                    if str(message_id) == str(id) and message not in confirmed_messages:
                         confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
                         all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas               
 
@@ -243,8 +243,9 @@ def order_packages():
                                 send_pacote(encrypted_ack)
                             
                             else:
-                                confirmed_messages.append((message_id[0], message_data)) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
-                                lamport_clock.update(message_id[1])
+                                if message not in confirmed_messages:
+                                    confirmed_messages.append((message_id[0], message_data)) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
+                                    lamport_clock.update(message_id[1])
                     
                     elif message_type == "Ack":
                         # Remova a mensagem da lista de mensagens enviadas pendentes
@@ -273,7 +274,7 @@ def order_packages():
                             # processing_packets.put(encrypted_confirmed)
                             send_pacote(encrypted_confirmed)
 
-                            if str(confirmed_id) == str(message_id):
+                            if str(confirmed_id) == str(message_id) and message not in confirmed_messages:
                                 confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
                                 all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
                                     
