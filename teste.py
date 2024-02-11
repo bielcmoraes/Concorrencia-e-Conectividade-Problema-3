@@ -52,7 +52,7 @@ def send_all_ping():
         for peer_address in peer_addresses:
             if peer_address != my_info:
                 send_ping(peer_address)
-        time.sleep(2)  # Verificar o status dos pares a cada 5 segundos
+        time.sleep(5)  # Verificar o status dos pares a cada 5 segundos
 
 def check_status():
     while True:
@@ -68,7 +68,7 @@ def check_status():
         
         if len(peer_status[addr[0]]) > 3:
             peer_status.pop(addr[0])
-        time.sleep(0.4)
+        time.sleep(2)
         # print("Pares Online:", peer_status.keys())
 
 def remove_pending_messages():
@@ -272,18 +272,12 @@ def order_packages():
                             all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
                                 
                 elif message_type == "Sync":
-                    print("AAAAAAAAAAAAAAAAAAAA")
                     if "message_id" in message_data and "text" in message_data:
-                        print("BBBBBBBBBBBB")
                         text_sync = message_data["text"]
                         if "Start sync" in text_sync:
-                            print("CCCCCCCCCCCCCCC")
                             for message in confirmed_messages:
                                 message[1]["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
-                                print("DDDDDDDDDDDDDDDDDD")
                                 message_json = json.dumps(message[1])
-                                print("EEEEEEEEEEE", message_json)
-                                print("MSG SYNCK ENV")
                                 message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
                                 processing_packets.put(message_encrypted)
                                 # send_pacote(message_encrypted)
