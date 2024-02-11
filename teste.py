@@ -222,13 +222,13 @@ def order_packages():
                         pongs.put((addr, message_data))
 
                     elif message_type == "Message":
+                        print(message_data)
 
                         if "message_id" in message_data and "text" in message_data and "ack_requested" in message_data:
                             message_id = message_data["message_id"]
                             ack_requested = message_data["ack_requested"]
 
                             if ack_requested:
-                                print(message_data)
                                 if ((message_id[0], message_data)) not in all_messages:
                                     all_messages.append((message_id[0], message_data))
                                     lamport_clock.update(message_id[1])
@@ -299,7 +299,6 @@ def order_messages(messages):
 def read_messages():
     
     all_messages_sorted = order_messages(confirmed_messages)
-    print(all_messages_sorted)
     print("\nTodas as mensagens: ")
     for message_data in all_messages_sorted:
         address = message_data[0]
