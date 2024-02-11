@@ -84,8 +84,8 @@ def remove_pending_messages():
                 }
                 confirmed_json = json.dumps(confirmed_data)
                 encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
-                processing_packets.put(encrypted_confirmed)
-                # send_pacote(encrypted_confirmed)
+                # processing_packets.put(encrypted_confirmed)
+                send_pacote(encrypted_confirmed)
 
                 for message in all_messages:
                     id = message[1]["message_id"]
