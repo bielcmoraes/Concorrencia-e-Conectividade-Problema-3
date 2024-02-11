@@ -31,8 +31,8 @@ def send_ping(peer_address):
         }
         message_json = json.dumps(message_data)
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-        # processing_packets.put(encrypted_message)
-        send_pacote(encrypted_message)
+        processing_packets.put(encrypted_message)
+        # send_pacote(encrypted_message)
 
         peer_on_exists = peer_status.get(peer_address[0])
                     
@@ -84,8 +84,8 @@ def remove_pending_messages():
                 }
                 confirmed_json = json.dumps(confirmed_data)
                 encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
-                # processing_packets.put(encrypted_confirmed)
-                send_pacote(encrypted_confirmed)      
+                processing_packets.put(encrypted_confirmed)
+                # send_pacote(encrypted_confirmed)      
 
 # Função para sincronizar mensagens
 def start_sync():
@@ -105,8 +105,8 @@ def start_sync():
 
     encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
     # Enviar a mensagem para todos os pares
-    # processing_packets.put(encrypted_message)
-    send_pacote(encrypted_message)
+    processing_packets.put(encrypted_message)
+    # send_pacote(encrypted_message)
 
 # Função para solicitar sincronização a cada "X" tempo
 def time_sync():
@@ -176,8 +176,8 @@ def send_messages():
         
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
         if encrypted_message:
-            # processing_packets.put(encrypted_message)
-            send_pacote(encrypted_message)
+            processing_packets.put(encrypted_message)
+            # send_pacote(encrypted_message)
 
         message_save = (my_info[0], message_data)
         if message_save not in all_messages:
@@ -209,8 +209,8 @@ def order_packages():
                         message_json = json.dumps(message_data)
 
                         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-                        # processing_packets.put(encrypted_message)
-                        send_pacote(encrypted_message)
+                        processing_packets.put(encrypted_message)
+                        # send_pacote(encrypted_message)
 
                     elif message_type == "Pong":
                         pongs.put((addr, message_data))
@@ -233,8 +233,8 @@ def order_packages():
                                 }
                                 ack_json = json.dumps(ack_data)
                                 encrypted_ack = encrypt_message(ack_json, OPERATION_NUMBER)
-                                # processing_packets.put(encrypted_ack)
-                                send_pacote(encrypted_ack)
+                                processing_packets.put(encrypted_ack)
+                                # send_pacote(encrypted_ack)
                             
                             else:
                                 confirmed_messages.append((message_id[0], message_data)) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
@@ -264,8 +264,8 @@ def order_packages():
                             }
                             confirmed_json = json.dumps(confirmed_data)
                             encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
-                            # processing_packets.put(encrypted_confirmed)
-                            send_pacote(encrypted_confirmed)
+                            processing_packets.put(encrypted_confirmed)
+                            # send_pacote(encrypted_confirmed)
 
                             if str(confirmed_id) == str(message_id):
                                 confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
@@ -279,8 +279,8 @@ def order_packages():
                                     message[1]["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
                                     message_json = json.dumps(message[1])
                                     message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
-                                    # processing_packets.put(message_encrypted)
-                                    send_pacote(message_encrypted)
+                                    processing_packets.put(message_encrypted)
+                                    # send_pacote(message_encrypted)
         except Exception as e:
             print("Erro ao ordenar pacotes: ", e)
 
