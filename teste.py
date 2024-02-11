@@ -134,8 +134,10 @@ def decrypt_message(mensagem, port):
 
 def receive_messages():
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_socket.bind(my_info)
 
+    udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 100000)
+    
+    udp_socket.bind(my_info)
     while True:
         data, addr = udp_socket.recvfrom(2048)
         received_packets.put((addr, data))
@@ -143,6 +145,9 @@ def receive_messages():
 def send_pacote(objMsg):
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 100000)
+
         for peer_addr in peer_addresses:
             if peer_addr != my_info:
                     client_socket.sendto(objMsg.encode(), peer_addr)
