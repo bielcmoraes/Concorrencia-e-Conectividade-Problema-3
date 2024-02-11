@@ -263,6 +263,9 @@ def order_packages():
                     
                     elif message_type == "Confirmed":
                         print("Confirmed")
+                        all_confirmed = all(message[1]["message_id"] == message_data["message_id"] for message in all_messages)
+                        if all_confirmed:
+                            break
                         for message in all_messages:
                             confirmed_id = message_data["message_id"]
                             message_id = message[1]["message_id"]
