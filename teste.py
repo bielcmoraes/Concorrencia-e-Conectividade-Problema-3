@@ -63,11 +63,11 @@ def check_status():
 
         try:
             peer_status[addr[0]].remove(id)
+            if len(peer_status[addr[0]]) > 3:
+                peer_status.pop(addr[0])
         except (KeyError, ValueError):
             pass
         
-        if len(peer_status[addr[0]]) > 3:
-            peer_status.pop(addr[0])
         time.sleep(2)
         # print("Pares Online:", peer_status.keys())
 
@@ -146,6 +146,7 @@ def send_pacote(objMsg):
         for peer_addr in peer_addresses:
             if peer_addr != my_info:
                     client_socket.sendto(objMsg.encode(), peer_addr)
+                    time.sleep(1)
     except Exception as e:
         print("Erro ao enviar pacote: ", e)
     finally:
