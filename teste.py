@@ -19,6 +19,7 @@ lamport_clock = LamportClock()
 my_info = (None, None)
 all_messages = []
 confirmed_messages = []
+mutex = threading.Lock()
 
 OPERATION_NUMBER = 5
 
@@ -86,12 +87,13 @@ def remove_pending_messages():
                 encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
                 # processing_packets.put(encrypted_confirmed)
                 send_pacote(encrypted_confirmed)
-
-                for message in all_messages:
-                    id = message[1]["message_id"]
-                    if str(message_id) == str(id) and message not in confirmed_messages:
-                        confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
-                        all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas               
+                
+                with mutex:
+                    for message in all_messages:
+                        id = message[1]["message_id"]
+                        if str(message_id) == str(id) and message not in confirmed_messages:
+                            confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
+                            all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas               
 
 # Função para sincronizar mensagens
 def start_sync():
@@ -151,7 +153,7 @@ def send_pacote(objMsg):
         for peer_addr in peer_addresses:
             if peer_addr != my_info:
                     client_socket.sendto(objMsg.encode(), peer_addr)
-                    time.sleep(0.5)
+                    time.sleep(1)
     except Exception as e:
         print("Erro ao enviar pacote: ", e)
     finally:
@@ -267,17 +269,19 @@ def order_packages():
                                 acks[str(message_id)].append(addr)
                     
                     elif message_type == "Confirmed":
-                        print("Confirmed")
+                        
                         all_confirmed = all(message[1]["message_id"] == message_data["message_id"] for message in all_messages)
                         if all_confirmed:
                             break
                         for message in all_messages:
+                            print("Confirmed")
                             confirmed_id = message_data["message_id"]
                             message_id = message[1]["message_id"]
 
                             if str(confirmed_id) == str(message_id) and message not in confirmed_messages:
                                 confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
                                 all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
+                                break
                                     
                     elif message_type == "Sync":
                         print("Sync")
