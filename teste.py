@@ -140,9 +140,13 @@ def receive_messages():
     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 100000)
     
     udp_socket.bind(my_info)
-    while True:
-        data, addr = udp_socket.recvfrom(2048)
-        received_packets.put((addr, data))
+
+    try:
+        while True:
+            data, addr = udp_socket.recvfrom(2048)
+            received_packets.put((addr, data))
+    finally:
+        udp_socket.close()
 
 def send_pacote(objMsg):
     try:
