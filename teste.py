@@ -274,11 +274,15 @@ def order_packages():
                 elif message_type == "Sync":
                     print("AAAAAAAAAAAAAAAAAAAA")
                     if "message_id" in message_data and "text" in message_data:
+                        print("BBBBBBBBBBBB")
                         text_sync = message_data["text"]
                         if "Start sync" in text_sync:
-                            for message in all_messages:
+                            print("CCCCCCCCCCCCCCC")
+                            for message in confirmed_messages:
                                 message[1]["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
+                                print("DDDDDDDDDDDDDDDDDD")
                                 message_json = json.dumps(message[1])
+                                print("EEEEEEEEEEE", message_json)
                                 print("MSG SYNCK ENV")
                                 message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
                                 processing_packets.put(message_encrypted)
