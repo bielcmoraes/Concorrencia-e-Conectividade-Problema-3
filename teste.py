@@ -52,7 +52,7 @@ def send_all_ping():
         for peer_address in peer_addresses:
             if peer_address != my_info:
                 send_ping(peer_address)
-        time.sleep(5)  # Verificar o status dos pares a cada 5 segundos
+        time.sleep(3)  # Verificar o status dos pares a cada 5 segundos
 
 def check_status():
     while True:
@@ -68,7 +68,7 @@ def check_status():
         except (KeyError, ValueError):
             pass
         
-        time.sleep(2)
+        time.sleep(1)
         # print("Pares Online:", peer_status.keys())
 
 def remove_pending_messages():
