@@ -340,6 +340,7 @@ def main():
             order_packages_thread.daemon = True
             order_packages_thread.start()
 
+            start_sync()
 
             send_ping_thread = threading.Thread(target=send_all_ping)
             send_ping_thread.daemon = True
@@ -355,7 +356,6 @@ def main():
 
             # clear_terminal()
 
-            start_sync()
             while True:
                 print("[1] Para enviar mensagens")
                 print("[2] Para visualizar mensagens")
