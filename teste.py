@@ -8,15 +8,17 @@ import uuid
 from queue import Queue
 from lamport_clock import LamportClock
 
-# peer_addresses = [("172.16.103.1", 5555), ("172.16.103.2", 5555), ("172.16.103.3", 5555), ("172.16.103.4", 5555), ("172.16.103.5", 5555), ("172.16.103.6", 5555), ("172.16.103.7", 5555), ("172.16.103.8", 5555), ("172.16.103.9", 5555), ("172.16.103.10", 5555), ("172.16.103.11", 5555), ("172.16.103.12", 5555), ("172.16.103.13", 5555), ("172.16.103.14", 5555)]
-peer_addresses = [("192.168.0.121", 5555), ("192.168.0.110", 5555)]
+port = 5555
+# peer_addresses = [("172.16.103.1", port), ("172.16.103.2", port), ("172.16.103.3", port), ("172.16.103.4", port), ("172.16.103.5", port), ("172.16.103.6", port), ("172.16.103.7", port), ("172.16.103.8", port), ("172.16.103.9", port), ("172.16.103.10", port), ("172.16.103.11", port), ("172.16.103.12", port), ("172.16.103.13", port), ("172.16.103.14", port)]
+peer_addresses = [("192.168.0.121", port), ("192.168.0.110", port)]
+peer_addresses_online = []
 peer_status = {}
 acks = {}
 pongs = Queue()
 received_packets = Queue()
 processing_packets = Queue()
 lamport_clock = LamportClock()
-my_info = (None, None)
+my_info = (None, port)
 all_messages = []
 confirmed_messages = []
 mutex = threading.Lock()
@@ -32,8 +34,7 @@ def send_ping(peer_address):
         }
         message_json = json.dumps(message_data)
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-        # processing_packets.put(encrypted_message)
-        send_pacote(encrypted_message)
+        send_for_all(encrypted_message)
 
         peer_on_exists = peer_status.get(peer_address[0])
                     
@@ -63,14 +64,20 @@ def check_status():
         id = message["id"]
 
         try:
+            
+            if (addr[0], port) not in peer_addresses_online:
+                peer_addresses_online.append((addr[0], port)) # Adiciona na lista de usuários online
+
             peer_status[addr[0]].remove(id)
+
             if len(peer_status[addr[0]]) > 3:
-                peer_status.pop(addr[0])
+                peer_status.pop(addr[0]) #Remove o status online
+                peer_addresses_online.remove((addr[0], port)) #Remove da lista de online
         except (KeyError, ValueError):
             pass
         
         time.sleep(1)
-        # print("Pares Online:", peer_status.keys())
+        # print("Pares Online:", peer_addresses_online)
 
 def remove_pending_messages():
 
@@ -85,8 +92,7 @@ def remove_pending_messages():
                 }
                 confirmed_json = json.dumps(confirmed_data)
                 encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
-                # processing_packets.put(encrypted_confirmed)
-                send_pacote(encrypted_confirmed)
+                send_for_online(encrypted_confirmed)
                 
                 with mutex:
                     for message in all_messages:
@@ -113,8 +119,7 @@ def start_sync():
 
     encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
     # Enviar a mensagem para todos os pares
-    # processing_packets.put(encrypted_message)
-    send_pacote(encrypted_message)
+    send_for_online(encrypted_message)
 
 # Função para solicitar sincronização a cada "X" tempo
 def time_sync():
@@ -148,7 +153,7 @@ def receive_messages():
     finally:
         udp_socket.close()
 
-def send_pacote(objMsg):
+def send_for_all(objMsg):
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -157,16 +162,40 @@ def send_pacote(objMsg):
         for peer_addr in peer_addresses:
             if peer_addr != my_info:
                     client_socket.sendto(objMsg.encode(), peer_addr)
+                    time.sleep(0.8)
+    except Exception as e:
+        print("Erro ao enviar pacote: ", e)
+    finally:
+        client_socket.close()
+
+def send_for_online(objMsg):
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 100000)
+
+        for peer_addr in peer_addresses_online:
+            if peer_addr != my_info:
+                    client_socket.sendto(objMsg.encode(), peer_addr)
                     time.sleep(1)
     except Exception as e:
         print("Erro ao enviar pacote: ", e)
     finally:
         client_socket.close()
 
-def process_packet_queue():
-    while True:
-        package = processing_packets.get()
-        send_pacote(package)
+def send_for_one(objMsg, peer_addr):
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 100000)
+
+        if peer_addr != my_info:
+            client_socket.sendto(objMsg.encode(), peer_addr)
+
+    except Exception as e:
+        print("Erro ao enviar pacote: ", e)
+    finally:
+        client_socket.close()
 
 def send_messages():
     while True:
@@ -193,8 +222,7 @@ def send_messages():
         
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
         if encrypted_message:
-            # processing_packets.put(encrypted_message)
-            send_pacote(encrypted_message)
+            send_for_online(encrypted_message)
 
         message_save = (my_info[0], message_data)
         if message_save not in all_messages:
@@ -226,8 +254,7 @@ def order_packages():
                         message_json = json.dumps(message_data)
 
                         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-                        # processing_packets.put(encrypted_message)
-                        send_pacote(encrypted_message)
+                        send_for_one(encrypted_message, (addr[0], port))
 
                     elif message_type == "Pong":
                         pongs.put((addr, message_data))
@@ -250,8 +277,7 @@ def order_packages():
                                 }
                                 ack_json = json.dumps(ack_data)
                                 encrypted_ack = encrypt_message(ack_json, OPERATION_NUMBER)
-                                # processing_packets.put(encrypted_ack)
-                                send_pacote(encrypted_ack)
+                                send_for_one(encrypted_ack, (addr[0], port))
                             
                             else:
                                 if message not in confirmed_messages:
@@ -274,15 +300,12 @@ def order_packages():
                     
                     elif message_type == "Confirmed":
                         
-                        all_confirmed = all(message[1]["message_id"] == message_data["message_id"] for message in all_messages)
-                        if all_confirmed:
-                            break
                         for message in all_messages:
-                            print("Confirmed")
                             confirmed_id = message_data["message_id"]
                             message_id = message[1]["message_id"]
 
                             if str(confirmed_id) == str(message_id) and message not in confirmed_messages:
+                                print("Confirmed")
                                 confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
                                 all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
                                 break
@@ -296,8 +319,7 @@ def order_packages():
                                     message[1]["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
                                     message_json = json.dumps(message[1])
                                     message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
-                                    # processing_packets.put(message_encrypted)
-                                    send_pacote(message_encrypted)
+                                    send_for_one(message_encrypted, (addr[0], port))
         except Exception as e:
             print("Erro ao ordenar pacotes: ", e)
 
@@ -332,8 +354,7 @@ def main():
     global my_info
 
     my_ip = input("Digite seu endereço IP: ")
-    my_port = int(input("Digite sua porta: "))
-    my_info = (my_ip, my_port)
+    my_info = (my_ip, port)
 
     try:
             
@@ -342,15 +363,10 @@ def main():
             receive_thread.daemon = True
             receive_thread.start()
 
-            process_packet_queue_thread = threading.Thread(target=process_packet_queue)
-            process_packet_queue_thread.daemon = True
-            process_packet_queue_thread.start()
-
             order_packages_thread = threading.Thread(target=order_packages)
             order_packages_thread.daemon = True
             order_packages_thread.start()
 
-            start_sync()
 
             send_ping_thread = threading.Thread(target=send_all_ping)
             send_ping_thread.daemon = True
@@ -364,6 +380,7 @@ def main():
             remove_pending_messages_thread.daemon = True
             remove_pending_messages_thread.start()
 
+            start_sync()
             # clear_terminal()
 
             while True:
