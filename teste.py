@@ -16,7 +16,6 @@ peer_status = {}
 acks = {}
 pongs = Queue()
 received_packets = Queue()
-processing_packets = Queue()
 lamport_clock = LamportClock()
 my_info = (None, port)
 all_messages = []
