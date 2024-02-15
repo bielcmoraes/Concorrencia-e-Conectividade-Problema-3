@@ -67,6 +67,7 @@ def remove_pending_messages():
 
     while True:
         for message_id, acks_list in list(acks.items()):
+            
             all_confirmed = all(addr_id[0] in peer_status for addr_id in acks_list) #Verificar se os pares online confirmaram o recebimento da mensagem
 
             if all_confirmed:
@@ -155,12 +156,16 @@ def send_for_all(objMsg):
 def send_for_online(objMsg):
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        senders = []
         for peer_addr in peer_addresses:
             status_peer = peer_status.get(peer_addr).get("Status")
             if peer_addr != my_info and status_peer == True:
                     client_socket.sendto(objMsg.encode(), peer_addr)
                     print(peer_addr, status_peer)
+                    senders.append(peer_addr)
                     #time.sleep(1)
+        
+        return senders
     except Exception as e:
         print("Erro ao enviar pacote: ", e)
     finally:
@@ -201,10 +206,13 @@ def send_messages():
         # Enviar a mensagem para todos os pares
         
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
+        
         if encrypted_message:
-            send_for_online(encrypted_message)
+            senders = send_for_online(encrypted_message)
 
+        message_data["Senders"] = senders
         message_save = (my_info[0], message_data)
+
         if message_save not in all_messages:
             all_messages.append(message_save)
             # print("MENsaGEM ENVIADA AGUIARDA CONFIRM: ", all_messages)
