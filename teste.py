@@ -9,13 +9,23 @@ from queue import Queue
 from lamport_clock import LamportClock
 
 port = 5555
-# peer_addresses = [("172.16.103.1", port), ("172.16.103.2", port), ("172.16.103.3", port), ("172.16.103.4", port), ("172.16.103.5", port), ("172.16.103.6", port), ("172.16.103.7", port), ("172.16.103.8", port), ("172.16.103.9", port), ("172.16.103.10", port), ("172.16.103.11", port), ("172.16.103.12", port), ("172.16.103.13", port), ("172.16.103.14", port)]
-peer_addresses = [("192.168.43.198", port), ("192.168.43.107", port)]
+
+peer_addresses = [("172.16.103.1", port), ("172.16.103.2", port), ("172.16.103.3", port), ("172.16.103.4", port), ("172.16.103.5", port), ("172.16.103.6", port), ("172.16.103.7", port), ("172.16.103.8", port), ("172.16.103.9", port), ("172.16.103.10", port), ("172.16.103.11", port), ("172.16.103.12", port), ("172.16.103.13", port), ("172.16.103.14", port), ("192.168.43.198", port), ("192.168.43.107", port), ("192.168.0.121", port), ("192.168.0.111", port)]
+
 peer_status = {
+    ("192.168.0.121", port): {"Status": False, "Time_stamp": 0},
+    ("192.168.0.111", port): {"Status": False, "Time_stamp": 0},
     ("192.168.43.198", port): {"Status": False, "Time_stamp": 0},
     ("192.168.43.107", port): {"Status": False, "Time_stamp": 0},
     ("172.16.103.1", port): {"Status": False, "Time_stamp": 0},
     ("172.16.103.2", port): {"Status": False, "Time_stamp": 0},
+    ("172.16.103.3", port): {"Status": False, "Time_stamp": 0},
+    ("172.16.103.4", port): {"Status": False, "Time_stamp": 0},
+    ("172.16.103.5", port): {"Status": False, "Time_stamp": 0},
+    ("172.16.103.6", port): {"Status": False, "Time_stamp": 0},
+    ("172.16.103.7", port): {"Status": False, "Time_stamp": 0},
+    ("172.16.103.8", port): {"Status": False, "Time_stamp": 0},
+    ("172.16.103.9", port): {"Status": False, "Time_stamp": 0},
 }
 acks = {}
 pongs = Queue()
@@ -158,12 +168,12 @@ def send_for_online(objMsg):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         senders = []
         for peer_addr in peer_addresses:
-            status_peer = peer_status.get(peer_addr).get("Status")
-            if peer_addr != my_info and status_peer == True:
+            if peer_addr in peer_status:
+                status_peer = peer_status.get(peer_addr).get("Status")
+                if status_peer and peer_addr != my_info and status_peer == True:
                     client_socket.sendto(objMsg.encode(), peer_addr)
-                    print(peer_addr, status_peer)
                     senders.append(peer_addr)
-                    #time.sleep(1)
+                    # time.sleep(0.4)
         
         return senders
     except Exception as e:
@@ -217,6 +227,7 @@ def send_messages():
             all_messages.append(message_save)
             # print("MENsaGEM ENVIADA AGUIARDA CONFIRM: ", all_messages)
             lamport_clock.increment()
+            print(all_messages)
 
 def order_packages():
     while True:
