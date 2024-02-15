@@ -102,6 +102,7 @@ def remove_pending_messages():
                 else:
                     acks_list = acks.get(message_id)
                     all_confirmed = compare_ip_lists(acks_list, senders_exits)
+                    print(all_confirmed)
         
         for info in list_temp:
             all_messages.remove(info)
