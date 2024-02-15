@@ -75,12 +75,14 @@ def check_status():
 
 def compare_ip_lists(list1, list2):
     # Extrai apenas os endereços IP da primeira lista
-    ips_list1 = [ip_port[0] for ip_port in list1]
-
-    # Verifica se todos os endereços IP da segunda lista estão presentes na primeira lista
-    for ip in list2:
-        if ip not in ips_list1:
-            return False
+    if list1:
+        ips_list1 = [ip_port[0] for ip_port in list1]
+    if list2:
+        ips_list2 = [ip_port[0] for ip_port in list2]
+        # Verifica se todos os endereços IP da segunda lista estão presentes na primeira lista
+        for ip in ips_list2:
+            if ip not in ips_list1:
+                return False
 
     return True
 
@@ -99,39 +101,23 @@ def remove_pending_messages():
                     confirmed_messages.append(message)
                     list_temp.append(info)
                     
-                else:
-                    acks_list = acks.get(message_id)
-                    all_confirmed = compare_ip_lists(acks_list, senders_exits)
-                    print(all_confirmed)
-        
+            else:
+                acks_list = acks.get(str(message_id))
+                all_confirmed = compare_ip_lists(senders_exits, acks_list)
+                if all_confirmed == True:
+
+                    confirmed_data = {
+                    "message_type": "Confirmed",
+                    "message_id": message_id
+                    }
+                    confirmed_json = json.dumps(confirmed_data)
+                    encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
+                    send_for_online(encrypted_confirmed)
+                    confirmed_messages.append(message)
+                    list_temp.append(info)
+
         for info in list_temp:
             all_messages.remove(info)
-
-            
-        # for message_id, acks_list in list(acks.items()):
-            
-        #     all_confirmed = compare_ip_lists() #Verificar se os pares online confirmaram o recebimento da mensagem
-
-        #     if all_confirmed:
-        #         confirmed_data = {
-        #             "message_type": "Confirmed",
-        #             "message_id": message_id
-        #         }
-        #         confirmed_json = json.dumps(confirmed_data)
-        #         encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
-        #         send_for_online(encrypted_confirmed)
-        #         print("CONFIRMED ENVIADO: ",)
-                
-        #         list_temp = []
-        #         for message in all_messages:
-        #             id = message[1]["message_id"]
-        #             if str(message_id) == str(id) and message not in confirmed_messages:
-        #                 confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
-        #                 # all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas               
-        #                 list_temp.append(message)
-                
-        #         for text in list_temp:
-        #             all_messages.remove(text)
 
 # Função para sincronizar mensagens
 def start_sync():
@@ -300,7 +286,6 @@ def order_packages():
                             if ack_requested:
                                 if ((message_id[0], message_data)) not in all_messages:
                                     all_messages.append((message_id[0], message_data))
-                                    print("MENSAGEM ADD NA LISTA DE PENDENTES: ", all_messages)
                                     lamport_clock.update(message_id[1])
                             
                                 ack_data = {
@@ -321,7 +306,6 @@ def order_packages():
                             message_id = message_data["message_id"]
                             
                             ack_key_exists = acks.get(str(message_id))
-                        
                             if not ack_key_exists:
                                 acks[str(message_id)] = [addr]
                                 
