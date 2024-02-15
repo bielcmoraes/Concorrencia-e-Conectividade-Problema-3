@@ -73,33 +73,64 @@ def check_status():
         
         time.sleep(0.2)
 
+def compare_ip_lists(list1, list2):
+    # Extrai apenas os endereços IP da primeira lista
+    ips_list1 = [ip_port[0] for ip_port in list1]
+
+    # Verifica se todos os endereços IP da segunda lista estão presentes na primeira lista
+    for ip in list2:
+        if ip not in ips_list1:
+            return False
+
+    return True
+
 def remove_pending_messages():
 
     while True:
-        for message_id, acks_list in list(acks.items()):
-            
-            all_confirmed = all(addr_id[0] in peer_status for addr_id in acks_list) #Verificar se os pares online confirmaram o recebimento da mensagem
 
-            if all_confirmed:
-                confirmed_data = {
-                    "message_type": "Confirmed",
-                    "message_id": message_id
-                }
-                confirmed_json = json.dumps(confirmed_data)
-                encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
-                send_for_online(encrypted_confirmed)
-                print("CONFIRMED ENVIADO: ",)
+        list_temp = []
+        for info in all_messages:
+            message = info[1]
+            message_id = message["message_id"]
+            senders_exits = message.get("Senders")
+
+            if senders_exits == []:
+                if len(senders_exits) == 0:
+                    confirmed_messages.append(message)
+                    list_temp.append(info)
+                    
+                else:
+                    acks_list = acks.get(message_id)
+                    all_confirmed = compare_ip_lists(acks_list, senders_exits)
+        
+        for info in list_temp:
+            all_messages.remove(info)
+
+            
+        # for message_id, acks_list in list(acks.items()):
+            
+        #     all_confirmed = compare_ip_lists() #Verificar se os pares online confirmaram o recebimento da mensagem
+
+        #     if all_confirmed:
+        #         confirmed_data = {
+        #             "message_type": "Confirmed",
+        #             "message_id": message_id
+        #         }
+        #         confirmed_json = json.dumps(confirmed_data)
+        #         encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
+        #         send_for_online(encrypted_confirmed)
+        #         print("CONFIRMED ENVIADO: ",)
                 
-                list_temp = []
-                for message in all_messages:
-                    id = message[1]["message_id"]
-                    if str(message_id) == str(id) and message not in confirmed_messages:
-                        confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
-                        # all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas               
-                        list_temp.append(message)
+        #         list_temp = []
+        #         for message in all_messages:
+        #             id = message[1]["message_id"]
+        #             if str(message_id) == str(id) and message not in confirmed_messages:
+        #                 confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
+        #                 # all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas               
+        #                 list_temp.append(message)
                 
-                for text in list_temp:
-                    all_messages.remove(text)
+        #         for text in list_temp:
+        #             all_messages.remove(text)
 
 # Função para sincronizar mensagens
 def start_sync():
@@ -227,7 +258,6 @@ def send_messages():
             all_messages.append(message_save)
             # print("MENsaGEM ENVIADA AGUIARDA CONFIRM: ", all_messages)
             lamport_clock.increment()
-            print(all_messages)
 
 def order_packages():
     while True:
@@ -286,7 +316,6 @@ def order_packages():
                                     lamport_clock.update(message_id[1])
                     
                     elif message_type == "Ack":
-                        print("ACK")
                         if "message_id" in message_data:
                             message_id = message_data["message_id"]
                             
@@ -395,7 +424,8 @@ def main():
                     # clear_terminal()
 
                 elif menu_main == 2:
-                    read_messages()
+                    # read_messages()
+                    print(confirmed_messages)
 
                 elif menu_main == 3:
                     # Feche o socket ao sair                    
