@@ -274,29 +274,29 @@ def order_packages():
                     
                     elif message_type == "Ack":
                         print("ACK")
-                        # Remova a mensagem da lista de mensagens enviadas pendentes
-                        if "message_id" in message_data:
-                            message_id = message_data["message_id"]
+                    #     # Remova a mensagem da lista de mensagens enviadas pendentes
+                    #     if "message_id" in message_data:
+                    #         message_id = message_data["message_id"]
                             
-                            ack_key_exists = acks.get(str(message_id))
+                    #         ack_key_exists = acks.get(str(message_id))
                         
-                            if not ack_key_exists:
-                                acks[str(message_id)] = [addr]
+                    #         if not ack_key_exists:
+                    #             acks[str(message_id)] = [addr]
                                 
-                            else:
-                                acks[str(message_id)].append(addr)
+                    #         else:
+                    #             acks[str(message_id)].append(addr)
                     
-                    elif message_type == "Confirmed":
+                    # elif message_type == "Confirmed":
                         
-                        for message in all_messages:
-                            confirmed_id = message_data["message_id"]
-                            message_id = message[1]["message_id"]
+                    #     for message in all_messages:
+                    #         confirmed_id = message_data["message_id"]
+                    #         message_id = message[1]["message_id"]
 
-                            if str(confirmed_id) == str(message_id) and message not in confirmed_messages:
-                                print("Confirmed")
-                                confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
-                                all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
-                                break
+                    #         if str(confirmed_id) == str(message_id) and message not in confirmed_messages:
+                    #             print("Confirmed")
+                    #             confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
+                    #             all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
+                    #             break
                                     
                     elif message_type == "Sync":
                         print("Sync")
