@@ -140,8 +140,6 @@ def decrypt_message(mensagem, port):
 
 def receive_messages():
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 100000)
     
     udp_socket.bind(my_info)
 
@@ -356,7 +354,6 @@ def main():
             order_packages_thread = threading.Thread(target=order_packages)
             order_packages_thread.daemon = True
             order_packages_thread.start()
-
 
             send_ping_thread = threading.Thread(target=send_all_ping)
             send_ping_thread.daemon = True
