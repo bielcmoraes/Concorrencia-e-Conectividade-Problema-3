@@ -10,7 +10,7 @@ from lamport_clock import LamportClock
 
 port = 5555
 # peer_addresses = [("172.16.103.1", port), ("172.16.103.2", port), ("172.16.103.3", port), ("172.16.103.4", port), ("172.16.103.5", port), ("172.16.103.6", port), ("172.16.103.7", port), ("172.16.103.8", port), ("172.16.103.9", port), ("172.16.103.10", port), ("172.16.103.11", port), ("172.16.103.12", port), ("172.16.103.13", port), ("172.16.103.14", port)]
-peer_addresses = [("192.168.0.121", port), ("192.168.0.110", port)]
+peer_addresses = [("192.168.43.198", port), ("192.168.43.107", port)]
 peer_addresses_online = []
 peer_status = {}
 acks = {}
@@ -53,7 +53,7 @@ def send_all_ping():
         for peer_address in peer_addresses:
             if peer_address != my_info:
                 send_ping(peer_address)
-        time.sleep(3)  # Verificar o status dos pares a cada 5 segundos
+        # time.sleep(1)  # Verificar o status dos pares a cada 5 segundos
 
 def check_status():
     while True:
@@ -161,7 +161,8 @@ def send_for_all(objMsg):
         for peer_addr in peer_addresses:
             if peer_addr != my_info:
                     client_socket.sendto(objMsg.encode(), peer_addr)
-                    time.sleep(0.8)
+        
+        time.sleep(0.4)
     except Exception as e:
         print("Erro ao enviar pacote: ", e)
     finally:
@@ -176,7 +177,7 @@ def send_for_online(objMsg):
         for peer_addr in peer_addresses_online:
             if peer_addr != my_info:
                     client_socket.sendto(objMsg.encode(), peer_addr)
-                    time.sleep(1)
+                    #time.sleep(1)
     except Exception as e:
         print("Erro ao enviar pacote: ", e)
     finally:
