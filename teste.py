@@ -252,7 +252,6 @@ def order_packages():
                         pongs.put((addr, message_data))
 
                     elif message_type == "Message":
-                        print("Message")
 
                         if "message_id" in message_data and "text" in message_data and "ack_requested" in message_data:
                             message_id = message_data["message_id"]
@@ -261,6 +260,7 @@ def order_packages():
                             if ack_requested:
                                 if ((message_id[0], message_data)) not in all_messages:
                                     all_messages.append((message_id[0], message_data))
+                                    print("MENSAGEM ADD NA LISTA DE PENDENTES: ", all_messages)
                                     lamport_clock.update(message_id[1])
                             
                                 ack_data = {
