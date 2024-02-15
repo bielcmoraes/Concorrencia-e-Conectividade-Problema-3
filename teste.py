@@ -53,7 +53,7 @@ def send_all_ping():
         for peer_address in peer_addresses:
             if peer_address != my_info:
                 send_ping(peer_address)
-        # time.sleep(1)  # Verificar o status dos pares a cada 5 segundos
+        time.sleep(1)  # Verificar o status dos pares a cada 5 segundos
 
 def check_status():
     while True:
@@ -155,14 +155,10 @@ def receive_messages():
 def send_for_all(objMsg):
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-        client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 100000)
-
         for peer_addr in peer_addresses:
             if peer_addr != my_info:
                     client_socket.sendto(objMsg.encode(), peer_addr)
         
-        time.sleep(0.4)
     except Exception as e:
         print("Erro ao enviar pacote: ", e)
     finally:
@@ -171,9 +167,6 @@ def send_for_all(objMsg):
 def send_for_online(objMsg):
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-        client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 100000)
-
         for peer_addr in peer_addresses_online:
             if peer_addr != my_info:
                     client_socket.sendto(objMsg.encode(), peer_addr)
@@ -186,9 +179,6 @@ def send_for_online(objMsg):
 def send_for_one(objMsg, peer_addr):
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-        client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 100000)
-
         if peer_addr != my_info:
             client_socket.sendto(objMsg.encode(), peer_addr)
 
