@@ -321,8 +321,8 @@ def order_packages():
                             if str(confirmed_id) == str(message_id) and message not in confirmed_messages:
                                 print("Confirmed")
                                 confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
-                                all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
-                                break
+                                if (message_id[0], message_data) in all_messages:
+                                    all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
                                     
                     elif message_type == "Sync":
                         print("Sync")
