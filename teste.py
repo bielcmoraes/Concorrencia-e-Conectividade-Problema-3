@@ -11,8 +11,12 @@ from lamport_clock import LamportClock
 port = 5555
 # peer_addresses = [("172.16.103.1", port), ("172.16.103.2", port), ("172.16.103.3", port), ("172.16.103.4", port), ("172.16.103.5", port), ("172.16.103.6", port), ("172.16.103.7", port), ("172.16.103.8", port), ("172.16.103.9", port), ("172.16.103.10", port), ("172.16.103.11", port), ("172.16.103.12", port), ("172.16.103.13", port), ("172.16.103.14", port)]
 peer_addresses = [("192.168.43.198", port), ("192.168.43.107", port)]
-peer_addresses_online = []
-peer_status = {}
+peer_status = {
+    ("192.168.43.198", port): {"Status": False, "Time_stamp": 0},
+    ("192.168.43.107", port): {"Status": False, "Time_stamp": 0},
+    ("172.16.103.1", port): {"Status": False, "Time_stamp": 0},
+    ("172.16.103.2", port): {"Status": False, "Time_stamp": 0},
+}
 acks = {}
 pongs = Queue()
 received_packets = Queue()
@@ -33,16 +37,7 @@ def send_ping(peer_address):
         }
         message_json = json.dumps(message_data)
         encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-        send_for_all(encrypted_message)
-
-        peer_on_exists = peer_status.get(peer_address[0])
-                    
-        if not peer_on_exists:
-            peer_status[peer_address[0]] = [message_data["id"]]
-            
-        else:
-            peer_status[peer_address[0]].append(message_data["id"])
-
+        send_for_one(encrypted_message, peer_address)
     except socket.timeout:
         pass
     except Exception as e:
@@ -53,30 +48,20 @@ def send_all_ping():
         for peer_address in peer_addresses:
             if peer_address != my_info:
                 send_ping(peer_address)
-        time.sleep(1)  # Verificar o status dos pares a cada 5 segundos
+        time.sleep(0.5)  # Verificar o status dos pares a cada 5 segundos
 
 def check_status():
+
     while True:
-        pong = pongs.get()
-        addr = pong[0]
-        message = pong[1]
-        id = message["id"]
-
-        try:
+        for peer in peer_status:
+            peer_time_stemp = peer_status.get(peer).get("Time_stamp")
+            if (time.time() - peer_time_stemp) > 4:
+                peer_status[peer]["Status"] = False
             
-            if (addr[0], port) not in peer_addresses_online:
-                peer_addresses_online.append((addr[0], port)) # Adiciona na lista de usuários online
-
-            peer_status[addr[0]].remove(id)
-
-            if len(peer_status[addr[0]]) > 3:
-                peer_status.pop(addr[0]) #Remove o status online
-                peer_addresses_online.remove((addr[0], port)) #Remove da lista de online
-        except (KeyError, ValueError):
-            pass
+            if peer == my_info:
+                peer_status[my_info]["Status"] = True
         
-        time.sleep(1)
-        # print("Pares Online:", peer_addresses_online)
+        time.sleep(0.2)
 
 def remove_pending_messages():
 
@@ -92,6 +77,7 @@ def remove_pending_messages():
                 confirmed_json = json.dumps(confirmed_data)
                 encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
                 send_for_online(encrypted_confirmed)
+                print("CONFIRMED ENVIADO: ",)
                 
                 list_temp = []
                 for message in all_messages:
@@ -169,9 +155,11 @@ def send_for_all(objMsg):
 def send_for_online(objMsg):
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        for peer_addr in peer_addresses_online:
-            if peer_addr != my_info:
+        for peer_addr in peer_addresses:
+            status_peer = peer_status.get(peer_addr).get("Status")
+            if peer_addr != my_info and status_peer == True:
                     client_socket.sendto(objMsg.encode(), peer_addr)
+                    print(peer_addr, status_peer)
                     #time.sleep(1)
     except Exception as e:
         print("Erro ao enviar pacote: ", e)
@@ -219,6 +207,7 @@ def send_messages():
         message_save = (my_info[0], message_data)
         if message_save not in all_messages:
             all_messages.append(message_save)
+            # print("MENsaGEM ENVIADA AGUIARDA CONFIRM: ", all_messages)
             lamport_clock.increment()
 
 def order_packages():
@@ -249,7 +238,8 @@ def order_packages():
                         send_for_one(encrypted_message, (addr[0], port))
 
                     elif message_type == "Pong":
-                        pongs.put((addr, message_data))
+                        peer_status[(addr[0], port)]["Status"] = True
+                        peer_status[(addr[0], port)]["Time_stamp"] = time.time()
 
                     elif message_type == "Message":
 
