@@ -128,8 +128,7 @@ def start_sync():
     # Crie um dicionário para a mensagem em formato JSON
     message_data = {
         "message_type": "Sync",
-        "message_id": [my_info[0], message_id],
-        "text": "Start sync."
+        "message_id": [my_info[0], message_id]
     }
 
     # Serializar a mensagem em JSON
@@ -137,6 +136,7 @@ def start_sync():
 
     encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
     # Enviar a mensagem para todos os pares
+    time.sleep(1)
     send_for_online(encrypted_message)
 
 # Função para solicitar sincronização a cada "X" tempo
@@ -370,13 +370,12 @@ def order_packages():
                     elif message_type == "Sync":
                         print("Sync")
                         if "message_id" in message_data and "text" in message_data:
-                            text_sync = message_data["text"]
-                            if "Start sync" in text_sync:
-                                for message in confirmed_messages:
-                                    message[1]["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
-                                    message_json = json.dumps(message[1])
-                                    message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
-                                    send_for_one(message_encrypted, (addr[0], port))
+                            
+                            for message in confirmed_messages:
+                                message[1]["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
+                                message_json = json.dumps(message[1])
+                                message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
+                                send_for_one(message_encrypted, (addr[0], port))
         except Exception as e:
             print("Erro ao ordenar pacotes: ", e)
 
