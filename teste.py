@@ -382,7 +382,7 @@ def order_packages():
 def order_messages(messages):
     # Define a função de chave para ordenação
     def key_function(message):
-        message_id = message['message_id']
+        message_id = list(message['message_id'])
         return message_id
 
     try:
