@@ -251,7 +251,7 @@ def send_messages_bot():
         
         try:
             if message_text != "exit":
-                for i in range(1, 500):  # Envia 20 mensagens sequenciais
+                for i in range(1, 5):  # Envia 20 mensagens sequenciais
                     message_text = f"Mensagem {i}"  # Mensagem sequencial
                     
                     # Gera um novo ID de mensagem
@@ -380,7 +380,7 @@ def order_packages():
             print("Erro ao ordenar pacotes: ", e)
 
 def order_messages(messages):
-    key_function = lambda x: (x['message_id'][1], x['message_id'][0])
+    key_function = lambda x: (eval(x['message_id'][1]), eval(x['message_id'][0]))
 
     # Ordena a lista com base no segundo valor de 'message_id' e, em caso de empate, no primeiro valor
     sorted_messages = sorted(messages, key=key_function)
