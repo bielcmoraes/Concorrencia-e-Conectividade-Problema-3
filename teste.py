@@ -368,7 +368,8 @@ def order_packages():
                                     all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
                                     
                     elif message_type == "Sync":
-                        if "message_id" in message_data and "text" in message_data:
+                        print("RECEBI SYNC")
+                        if "message_id" in message_data:
                             
                             for message in confirmed_messages:
                                 message[1]["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
