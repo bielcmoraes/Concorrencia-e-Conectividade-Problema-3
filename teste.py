@@ -380,7 +380,7 @@ def order_packages():
             print("Erro ao ordenar pacotes: ", e)
 
 def key_function(message):
-    message_id = message[1]['message_id']
+    message_id = message['message_id']
     second_value = message_id[1] if isinstance(message_id, tuple) and len(message_id) >= 2 else 0
     first_value = message_id[0] if isinstance(message_id, tuple) else 0
     return (second_value, first_value)
