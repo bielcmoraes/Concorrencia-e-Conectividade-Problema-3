@@ -118,6 +118,8 @@ def remove_pending_messages():
 
         for info in list_temp:
             all_messages.remove(info)
+        
+        time.sleep(0.5)
 
 # Função para sincronizar mensagens
 def start_sync():
@@ -374,15 +376,14 @@ def order_packages():
                                 all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
                                 
                 elif message_type == "Sync":
-                    print("RECEBI SYNC")
                     if "message_id" in message_data:
                         for message in confirmed_messages:
                             print(message)
-                            message["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
-                            message_json = json.dumps(message)
+                            message_sync = message # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
+                            message_sync["ack_requested"] = False
+                            message_json = json.dumps(message_sync)
                             message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
                             send_for_one(message_encrypted, (addr[0], port))
-                            print(message_json)
         # except Exception as e:
         #     print("Erro ao ordenar pacotes: ", e)
 
