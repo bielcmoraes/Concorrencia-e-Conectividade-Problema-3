@@ -338,18 +338,20 @@ def order_packages():
             print("Erro ao ordenar pacotes: ", e)
 
 def order_messages(messages):
-    # Utilize a função sorted do Python, fornecendo a função de ordenação com base no carimbo de tempo e, em caso de empate, no maior valor em messages[0]
-    ordered_messages = sorted(messages, key=lambda x: (x[1]["message_id"][1], x[0]))
-    return ordered_messages
+    key_function = lambda x: (x['message_id'][1], x['message_id'][0])
+
+    # Ordena a lista com base no segundo valor de 'message_id' e, em caso de empate, no primeiro valor
+    sorted_messages = sorted(messages, key=key_function)
+    return sorted_messages
 
 def read_messages():
     
     all_messages_sorted = order_messages(confirmed_messages)
     print("\nTodas as mensagens: ")
     for message_data in all_messages_sorted:
-        address = message_data[0]
-        text = message_data[1]['text']
-        message_id = message_data[1]['message_id']
+        address = (message_data['message_id'][0], port)
+        text = message_data['text']
+        message_id = message_data['message_id'][1]
         if address == my_info:
             print(f"My message({message_id}): {text}")
         else:
@@ -364,10 +366,24 @@ def clear_terminal():
     else:
         os.system("clear")
 
+def get_local_ip():
+    try:
+        # Obtém o nome do host da máquina
+        hostname = socket.gethostname()
+
+        # Obtém o endereço IP correspondente ao nome do host
+        ip_address = socket.gethostbyname(hostname)
+
+        return ip_address
+    except Exception as e:
+        print("Erro ao obter endereço IP local:", e)
+        return None
+
 def main():
     global my_info
+    
 
-    my_ip = input("Digite seu endereço IP: ")
+    my_ip = get_local_ip()
     my_info = (my_ip, port)
 
     try:
@@ -409,8 +425,8 @@ def main():
                     # clear_terminal()
 
                 elif menu_main == 2:
-                    # read_messages()
-                    print(confirmed_messages)
+                    read_messages()
+                    # print(confirmed_messages)
 
                 elif menu_main == 3:
                     # Feche o socket ao sair                    
