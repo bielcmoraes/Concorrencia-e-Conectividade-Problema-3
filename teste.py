@@ -339,7 +339,8 @@ def order_packages():
                                 send_for_one(encrypted_ack, (addr[0], port))
                             
                             else:
-                                if message not in confirmed_messages:
+                                message_data["ack_requested"] = True
+                                if message_data not in confirmed_messages:
                                     confirmed_messages.append(message_data) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
                                     lamport_clock.update(message_id[1])
                     
