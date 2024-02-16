@@ -122,6 +122,8 @@ def remove_pending_messages():
 # Função para sincronizar mensagens
 def start_sync():
 
+    print("Sincronizando...")
+
     # Gere um novo ID de mensagem
     message_id = lamport_clock.get_time()
 
@@ -138,6 +140,7 @@ def start_sync():
     # Enviar a mensagem para todos os pares
     time.sleep(1)
     send_for_online(encrypted_message)
+    time.sleep(10)
 
 # Função para solicitar sincronização a cada "X" tempo
 def time_sync():
@@ -340,6 +343,8 @@ def order_packages():
                             
                             else:
                                 message_data["ack_requested"] = True
+                                print(message_data)
+                                print(confirmed_messages)
                                 if message_data not in confirmed_messages:
                                     confirmed_messages.append(message_data) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
                                     lamport_clock.update(message_id[1])
@@ -371,7 +376,6 @@ def order_packages():
                     elif message_type == "Sync":
                         print("RECEBI SYNC")
                         if "message_id" in message_data:
-                            
                             for message in confirmed_messages:
                                 message[1]["ack_requested"] = False # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
                                 message_json = json.dumps(message[1])
