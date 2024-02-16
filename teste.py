@@ -480,8 +480,8 @@ def main():
 
                 if menu_main == 1:
                     # Inicie a função send_messages na thread principal
-                    send_messages()
-                    # send_messages_bot()
+                    # send_messages()
+                    send_messages_bot()
                     # clear_terminal()
 
                 elif menu_main == 2:
