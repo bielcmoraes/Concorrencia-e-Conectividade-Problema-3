@@ -93,6 +93,7 @@ def remove_pending_messages():
         list_temp = []
         for info in all_messages:
             message = info[1]
+            print(message)
             message_id = message["message_id"]
             senders_exits = message.get("Senders")
 
@@ -340,7 +341,7 @@ def order_packages():
                             
                             else:
                                 if message not in confirmed_messages:
-                                    confirmed_messages.append((message_id[0], message_data)) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
+                                    confirmed_messages.append(message_data) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
                                     lamport_clock.update(message_id[1])
                     
                     elif message_type == "Ack":
