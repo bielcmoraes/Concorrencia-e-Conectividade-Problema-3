@@ -299,93 +299,90 @@ def order_packages():
         addr = package_received[0]
         data = package_received[1]
 
-        # try:
-        data_decrypt = decrypt_message(data.decode("utf-8"), OPERATION_NUMBER)
+        try:
+            data_decrypt = decrypt_message(data.decode("utf-8"), OPERATION_NUMBER)
 
-        if data_decrypt:
-            message_data = json.loads(data_decrypt)
-            
-            if "message_type" in message_data:
-                message_type = message_data["message_type"]
+            if data_decrypt:
+                message_data = json.loads(data_decrypt)
                 
-                if message_type == "Ping":
+                if "message_type" in message_data:
+                    message_type = message_data["message_type"]
                     
-                    message_data = {
-                        "message_type": "Pong",
-                        "id": message_data["id"]
-                    }
-
-                    message_json = json.dumps(message_data)
-
-                    encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
-                    send_for_one(encrypted_message, (addr[0], port))
-
-                elif message_type == "Pong":
-                    peer_status[(addr[0], port)]["Status"] = True
-                    peer_status[(addr[0], port)]["Time_stamp"] = time.time()
-
-                elif message_type == "Message":
-
-                    if "message_id" in message_data and "text" in message_data and "ack_requested" in message_data:
-                        message_id = message_data["message_id"]
-                        ack_requested = message_data["ack_requested"]
-
-                        if ack_requested:
-                            if ((message_id[0], message_data)) not in all_messages:
-                                all_messages.append((message_id[0], message_data))
-                                lamport_clock.update(message_id[1])
+                    if message_type == "Ping":
                         
-                            ack_data = {
-                                "message_type": "Ack",
-                                "message_id": message_id
-                            }
-                            ack_json = json.dumps(ack_data)
-                            encrypted_ack = encrypt_message(ack_json, OPERATION_NUMBER)
-                            send_for_one(encrypted_ack, (addr[0], port))
-                        
-                        else:
-                            message_data["ack_requested"] = True
-                            print(message_data)
-                            print(confirmed_messages)
-                            if message_data not in confirmed_messages:
-                                confirmed_messages.append(message_data) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
-                                lamport_clock.update(message_id[1])
-                
-                elif message_type == "Ack":
-                    if "message_id" in message_data:
-                        message_id = message_data["message_id"]
-                        
-                        ack_key_exists = acks.get(str(message_id))
-                        if not ack_key_exists:
-                            acks[str(message_id)] = [addr]
+                        message_data = {
+                            "message_type": "Pong",
+                            "id": message_data["id"]
+                        }
+
+                        message_json = json.dumps(message_data)
+
+                        encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
+                        send_for_one(encrypted_message, (addr[0], port))
+
+                    elif message_type == "Pong":
+                        peer_status[(addr[0], port)]["Status"] = True
+                        peer_status[(addr[0], port)]["Time_stamp"] = time.time()
+
+                    elif message_type == "Message":
+
+                        if "message_id" in message_data and "text" in message_data and "ack_requested" in message_data:
+                            message_id = message_data["message_id"]
+                            ack_requested = message_data["ack_requested"]
+
+                            if ack_requested:
+                                if ((message_id[0], message_data)) not in all_messages:
+                                    all_messages.append((message_id[0], message_data))
+                                    lamport_clock.update(message_id[1])
                             
-                        else:
-                            acks[str(message_id)].append(addr)
-                
-                elif message_type == "Confirmed":
+                                ack_data = {
+                                    "message_type": "Ack",
+                                    "message_id": message_id
+                                }
+                                ack_json = json.dumps(ack_data)
+                                encrypted_ack = encrypt_message(ack_json, OPERATION_NUMBER)
+                                send_for_one(encrypted_ack, (addr[0], port))
+                            
+                            else:
+                                message_data["ack_requested"] = True
+                                if message_data not in confirmed_messages:
+                                    confirmed_messages.append(message_data) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
+                                    lamport_clock.update(message_id[1])
                     
-                    for message in all_messages:
-                        confirmed_id = message_data["message_id"]
-                        message_id = message[1]["message_id"]
-
-                        if str(confirmed_id) == str(message_id) and message not in confirmed_messages:
+                    elif message_type == "Ack":
+                        if "message_id" in message_data:
+                            message_id = message_data["message_id"]
                             
-                            confirmed_messages.append(message[1]) # Adiciona a mensagem à lista de mensagens confirmadas
-
-                            if (message_id[0], message_data) in all_messages:
-                                all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
+                            ack_key_exists = acks.get(str(message_id))
+                            if not ack_key_exists:
+                                acks[str(message_id)] = [addr]
                                 
-                elif message_type == "Sync":
-                    if "message_id" in message_data:
-                        for message in confirmed_messages:
-                            print(message)
-                            message_sync = message # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
-                            message_sync["ack_requested"] = False
-                            message_json = json.dumps(message_sync)
-                            message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
-                            send_for_one(message_encrypted, (addr[0], port))
-        # except Exception as e:
-        #     print("Erro ao ordenar pacotes: ", e)
+                            else:
+                                acks[str(message_id)].append(addr)
+                    
+                    elif message_type == "Confirmed":
+                        
+                        for message in all_messages:
+                            confirmed_id = message_data["message_id"]
+                            message_id = message[1]["message_id"]
+
+                            if str(confirmed_id) == str(message_id) and message not in confirmed_messages:
+                                
+                                confirmed_messages.append(message[1]) # Adiciona a mensagem à lista de mensagens confirmadas
+
+                                if (message_id[0], message_data) in all_messages:
+                                    all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
+                                    
+                    elif message_type == "Sync":
+                        if "message_id" in message_data:
+                            for message in confirmed_messages:
+                                message_sync = message # Altera o status para permitir que essas mensagens sejam adicionadas diretamente na lista de mensagens confirmadas
+                                message_sync["ack_requested"] = False
+                                message_json = json.dumps(message_sync)
+                                message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
+                                send_for_one(message_encrypted, (addr[0], port))
+        except Exception as e:
+            print("Erro ao ordenar pacotes: ", e)
 
 def key_function(message):
     message_id = message["message_id"]
