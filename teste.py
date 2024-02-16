@@ -93,13 +93,11 @@ def remove_pending_messages():
         list_temp = []
         for info in all_messages:
             message = info[1]
-            print(message)
             message_id = message["message_id"]
             senders_exits = message.get("Senders")
 
             if senders_exits == []:
                 if len(senders_exits) == 0:
-                    print("11111", message)
                     confirmed_messages.append(message)
                     list_temp.append(info)
                     
@@ -115,7 +113,6 @@ def remove_pending_messages():
                     confirmed_json = json.dumps(confirmed_data)
                     encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
                     send_for_online(encrypted_confirmed)
-                    print("2222222", message)
                     confirmed_messages.append(message)
                     list_temp.append(info)
 
@@ -254,7 +251,7 @@ def send_messages_bot():
         
         try:
             if message_text != "exit":
-                for i in range(1, 5):  # Envia 20 mensagens sequenciais
+                for i in range(1, 500):  # Envia 20 mensagens sequenciais
                     message_text = f"Mensagem {i}"  # Mensagem sequencial
                     
                     # Gera um novo ID de mensagem
@@ -343,7 +340,6 @@ def order_packages():
                             
                             else:
                                 if message not in confirmed_messages:
-                                    print("33333", message_data)
                                     confirmed_messages.append(message_data) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
                                     lamport_clock.update(message_id[1])
                     
@@ -366,7 +362,6 @@ def order_packages():
 
                             if str(confirmed_id) == str(message_id) and message not in confirmed_messages:
                                 
-                                print("44444", message)
                                 confirmed_messages.append(message[1]) # Adiciona a mensagem à lista de mensagens confirmadas
 
                                 if (message_id[0], message_data) in all_messages:
