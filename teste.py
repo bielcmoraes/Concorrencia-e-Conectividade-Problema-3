@@ -243,8 +243,50 @@ def send_messages():
 
         if message_save not in all_messages:
             all_messages.append(message_save)
-            # print("MENsaGEM ENVIADA AGUIARDA CONFIRM: ", all_messages)
             lamport_clock.increment()
+
+def send_messages_bot():
+    while True:
+        message_text = input("Digite as mensagens (ou 'exit' para sair): ")
+        
+        try:
+            if message_text != "exit":
+                for i in range(1, 500):  # Envia 20 mensagens sequenciais
+                    message_text = f"Mensagem {i}"  # Mensagem sequencial
+                    
+                    # Gera um novo ID de mensagem
+                    message_id = lamport_clock.get_time()
+
+                    # Cria um dicionário para a mensagem em formato JSON
+                    message_data = {
+                        "message_type": "Message",
+                        "message_id": [my_info[0], message_id],
+                        "text": message_text,
+                        "ack_requested": True
+                    }
+
+                    # Serializa a mensagem em JSON
+                    message_json = json.dumps(message_data)
+
+                    # Envia a mensagem para todos os pares
+                    encrypted_message = encrypt_message(message_json, OPERATION_NUMBER)
+                    if encrypted_message:
+                        senders = send_for_online(encrypted_message)
+
+                    message_data["Senders"] = senders
+                    message_save = (my_info[0], message_data)
+
+                    if message_save not in all_messages:
+                        all_messages.append(message_save)
+                        lamport_clock.increment()
+                    
+                    # Aguarda um pequeno intervalo antes de enviar a próxima mensagem
+                    time.sleep(0.3)
+                
+                return
+
+        except Exception as e:
+            print("Erro ao enviar mensagens:", e)
 
 def order_packages():
     while True:
@@ -421,7 +463,8 @@ def main():
 
                 if menu_main == 1:
                     # Inicie a função send_messages na thread principal
-                    send_messages()
+                    # send_messages()
+                    send_messages_bot()
                     # clear_terminal()
 
                 elif menu_main == 2:
