@@ -380,19 +380,18 @@ def order_packages():
             print("Erro ao ordenar pacotes: ", e)
 
 def key_function(message):
-    message_id = message['message_id']
-    print(type(message_id))
+    message_id = message[1]['message_id']
     second_value = message_id[1] if isinstance(message_id, tuple) and len(message_id) >= 2 else 0
     first_value = message_id[0] if isinstance(message_id, tuple) else 0
     return (second_value, first_value)
 
 def order_messages(messages):
-    try:
+    # try:
         sorted_messages = sorted(messages, key=key_function)
         return sorted_messages
-    except Exception as e:
-        print("Erro ao ordenar mensagens:", e)
-        return []
+    # except Exception as e:
+        # print("Erro ao ordenar mensagens:", e)
+        # return []
 
 def read_messages():
     
