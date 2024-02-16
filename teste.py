@@ -394,7 +394,7 @@ def order_messages(messages):
         # return []
 
 def read_messages():
-    
+    print(confirmed_messages)
     all_messages_sorted = order_messages(confirmed_messages)
     print("\nTodas as mensagens: ")
     for message_data in all_messages_sorted:
