@@ -368,7 +368,6 @@ def order_packages():
                                     all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
                                     
                     elif message_type == "Sync":
-                        print("Sync")
                         if "message_id" in message_data and "text" in message_data:
                             
                             for message in confirmed_messages:
@@ -376,6 +375,7 @@ def order_packages():
                                 message_json = json.dumps(message[1])
                                 message_encrypted = encrypt_message(message_json, OPERATION_NUMBER)
                                 send_for_one(message_encrypted, (addr[0], port))
+                                print(message_json)
         except Exception as e:
             print("Erro ao ordenar pacotes: ", e)
 
@@ -392,7 +392,6 @@ def order_messages(messages):
     except Exception as e:
         print("Erro ao ordenar mensagens:", e)
         return []
-
 
 def read_messages():
     all_messages_sorted = order_messages(confirmed_messages)
@@ -470,8 +469,8 @@ def main():
 
                 if menu_main == 1:
                     # Inicie a função send_messages na thread principal
-                    # send_messages()
-                    send_messages_bot()
+                    send_messages()
+                    # send_messages_bot()
                     # clear_terminal()
 
                 elif menu_main == 2:
