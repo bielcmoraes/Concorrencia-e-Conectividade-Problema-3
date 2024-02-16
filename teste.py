@@ -97,14 +97,14 @@ def remove_pending_messages():
             senders_exits = message.get("Senders")
 
             if senders_exits == []:
-                if len(senders_exits) == 0:
+                if len(senders_exits) == 0 and message not in confirmed_messages:
                     confirmed_messages.append(message)
                     list_temp.append(info)
                     
             else:
                 acks_list = acks.get(str(message_id))
                 all_confirmed = compare_ip_lists(senders_exits, acks_list)
-                if all_confirmed == True:
+                if all_confirmed == True and message not in confirmed_messages:
 
                     confirmed_data = {
                     "message_type": "Confirmed",
@@ -453,12 +453,13 @@ def main():
             check_status_thread = threading.Thread(target=check_status)
             check_status_thread.daemon = True
             check_status_thread.start()
+            
+            start_sync()
 
             remove_pending_messages_thread = threading.Thread(target=remove_pending_messages)
             remove_pending_messages_thread.daemon = True
             remove_pending_messages_thread.start()
 
-            start_sync()
             # clear_terminal()
 
             while True:
