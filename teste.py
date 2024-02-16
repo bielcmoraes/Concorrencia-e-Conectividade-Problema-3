@@ -99,6 +99,7 @@ def remove_pending_messages():
 
             if senders_exits == []:
                 if len(senders_exits) == 0:
+                    print("11111", message)
                     confirmed_messages.append(message)
                     list_temp.append(info)
                     
@@ -114,6 +115,7 @@ def remove_pending_messages():
                     confirmed_json = json.dumps(confirmed_data)
                     encrypted_confirmed = encrypt_message(confirmed_json, OPERATION_NUMBER)
                     send_for_online(encrypted_confirmed)
+                    print("2222222", message)
                     confirmed_messages.append(message)
                     list_temp.append(info)
 
@@ -341,6 +343,7 @@ def order_packages():
                             
                             else:
                                 if message not in confirmed_messages:
+                                    print("33333", message_data)
                                     confirmed_messages.append(message_data) # Adiciona as mensagens que são provenientes de sincronização direto na lista de mensagens confirmadas (pressupondo que os pares online tenham essas mensagens)
                                     lamport_clock.update(message_id[1])
                     
@@ -362,8 +365,10 @@ def order_packages():
                             message_id = message[1]["message_id"]
 
                             if str(confirmed_id) == str(message_id) and message not in confirmed_messages:
-                                confirmed_messages.append(message) # Adiciona a mensagem à lista de mensagens confirmadas
-                                print(message_data['message_id'][1])
+                                
+                                print("44444", message)
+                                confirmed_messages.append(message[1]) # Adiciona a mensagem à lista de mensagens confirmadas
+
                                 if (message_id[0], message_data) in all_messages:
                                     all_messages.remove(message) # Remove a mensagem da lista de mensagens não confirmadas
                                     
@@ -380,14 +385,20 @@ def order_packages():
         except Exception as e:
             print("Erro ao ordenar pacotes: ", e)
 
-def order_messages(confirmed_messages):
-    # try:
-    print(len(confirmed_messages))
-    for message in confirmed_messages:
-        print(message)
-    # except Exception as e:
-    #     print("Erro ao ordenar mensagens:", e)
-    #     return []
+def key_function(message):
+    message_id = message['message_id']
+    second_value = message_id[1] if isinstance(message_id, tuple) and len(message_id) >= 2 else 0
+    first_value = message_id[0] if isinstance(message_id, tuple) else 0
+    return (second_value, first_value)
+
+def order_messages(messages):
+    try:
+        sorted_messages = sorted(messages, key=key_function)
+        return sorted_messages
+    except Exception as e:
+        print("Erro ao ordenar mensagens:", e)
+        return []
+
 
 def read_messages():
     all_messages_sorted = order_messages(confirmed_messages)
