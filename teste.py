@@ -380,22 +380,16 @@ def order_packages():
         except Exception as e:
             print("Erro ao ordenar pacotes: ", e)
 
-def order_messages(messages):
-    # Define a função de chave para ordenação
-    def key_function(message):
-        message_id = list(message['message_id'])
-        return message_id
-
-    try:
-        # Ordena a lista com base no atributo 'message_id'
-        sorted_messages = sorted(messages, key=key_function)
-        return sorted_messages
-    except Exception as e:
-        print("Erro ao ordenar mensagens:", e)
-        return []
+def order_messages(confirmed_messages):
+    # try:
+    print(len(confirmed_messages))
+    for message in confirmed_messages:
+        print(message)
+    # except Exception as e:
+    #     print("Erro ao ordenar mensagens:", e)
+    #     return []
 
 def read_messages():
-    print(confirmed_messages)
     all_messages_sorted = order_messages(confirmed_messages)
     print("\nTodas as mensagens: ")
     for message_data in all_messages_sorted:
