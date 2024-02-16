@@ -256,7 +256,7 @@ def send_messages_bot():
         
         try:
             if message_text != "exit":
-                for i in range(1, 500):  # Envia 20 mensagens sequenciais
+                for i in range(1, 500):  # Envia  mensagens sequenciais
                     message_text = f"Mensagem {i}"  # Mensagem sequencial
                     
                     # Gera um novo ID de mensagem
