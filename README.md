@@ -86,20 +86,21 @@ Ao implementar criptografia utilizando chaves pública-privada é necessário ga
 Ao implementar a cifra de César, o software ganhou em desempenho e simplicidade, entretanto o sistema ficou bastante vulnerável a ataques, especialmente por meio de métodos de força bruta, devido ao pequeno espaço de chaves possíveis. 
 
 # 3. Resultados
-Ao iniciar o sistema, é solicitado do usuário o endereço IP da sua máquina na rede e a porta que deseja utilizar para a troca de mensagens (por ser um protótipo é necessário utilizar a porta 5555). Em seguida, é possível acessar um menu interativo com três opções: [1] para enviar mensagens, [2] para visualizar as mensagens recebidas e [3] para encerrar o aplicativo. Conforme a imagem abaixo:
+Ao iniciar o sistema, é solicitado do usuário o endereço IP da sua máquina na rede (nesta versão todos o protótipo "escuta" sempre na porta 5555). Em seguida, é possível acessar um menu interativo com cinco opções: [1] para enviar mensagens, [2] para visualizar as mensagens recebidas e [3] para acionar o bot de teste, [4] para salvar a lista de mensagem confirmadas em um arquivo em .txt e [5] para sair. Conforme a imagem abaixo:
 
 ![Menu principal.](https://github.com/bielcmoraes/Concorrencia-e-Conectividade-Problema-2/blob/master/readme_images/menu_principal.png)
 
-É importante salientar que após a sincronização incial do sistema (a sincronização inicial é capaz de atualizar o timestamp do relógio lógico e recuperar as mensagens trocadas enquanto o usuário estivesse offline, desde que pelo menos um dos pares permanecesse ativo), uma nova sincronização é realizada a cada 5 segundos onde todos os pares ativos enviam sua lista de mensagens atual garantindo que todos tenham a mesma versão da conversa.
+É importante salientar que as funcionalidades de sincronização incial do sistema (a sincronização inicial é capaz de atualizar o timestamp do relógio lógico e recuperar as mensagens trocadas enquanto o usuário estivesse offline, desde que pelo menos um dos pares permanecesse ativo) e criptografia foram mantidas. Houve a implementação de um algoritmo de comunicação confiável (reliable muticast) baseado em Acknowledgement (Ack), um sistema para a verificação de pares ativos (online), a criação de um bot para envio de varias mensagens de maneira simultânea e implementação de uma funcionalidade que salva a lista de mensagens exibidas/pacotes em um arquivo do tipo txt.
 
-Por fim, é de suma importancia destacar a robustez e simplicidade do sistema desenvolvido, visto que cumpre com as principais exigências da startup contratante.
+Por fim, é de suma importância destacar a robustez e simplicidade do sistema desenvolvido, visto que cumpre com as principais exigências da startup contratante.
 
 # 4. Conclusão
-Durante a implementação desse sofware houve um contante desafio e esforço que contribuiram para o entendimento do funcionamento de sistemas distribuídos de maneira geral. É de suma importância para desenvolvedores entender aspectos inerentes a sincronização e os desafios e vantagens a cerca de algumas arquiteturas descentralizadas, especialmente a peer to peer.
+Durante a implementação desse sofware houve um contante desafio e esforço que contribuiram para o entendimento do funcionamento de sistemas distribuídos de maneira geral, além de possibilitar a compreensão do quão complexo e detalhista é a implementação de tais sistemas. É de suma importância para desenvolvedores entender aspectos inerentes a sincronização e os desafios e vantagens a cerca de algumas arquiteturas descentralizadas, especialmente a peer to peer e o modelo de comunicação confiável.
 
 Todos os principais requisitos foram cumpridos de maneira eficiente, em especial a ordenação das mensagens e a garantia de que as listas de mensagens são as mesmas para todos os usuários ativos. É possível encerrar o software e recuperar mensagens trocadas anteriormente, desde que pelo menos um dos pares tenha ficado "online" e todos os pacotes que circulam na rede são criptografados.
 
-Pensando em possíveis melhorias, é interessante que, posteriormente, o sistema de criptografia seja atualizado com a implementação de criptografia de chave pública-privada ou com outra forma mais segura porém igualmente eficaz. Acredita-se que com essa simples melhoria a segurança do sistema como um todo melhore bastante.
+Pensando em possíveis melhorias, é interessante que, posteriormente, o sistema de criptografia seja atualizado com a implementação de criptografia de chave pública-privada ou com outra forma mais segura porém igualmente eficaz. Também cogitou-se a busca por algoritmos mais complexos e robustos que solucionassem o problema, visto que a solução adotada tem como desvantagem o alto fluxo de pacotes na rede e uma possível sobrecarga do sistema a depender da quantidade de pares ativos e da quantidade de mensagens trocadas. Acredita-se que com essas simples melhorias a segurança do sistema como um todo melhore bastante junto à solidez e capacidade de envio e recebimento de mensagens.
 
 # Referências
-Python threading module: Disponível em: https://docs.python.org/3/library/threading.html. Acesso em: 20 de out. de 2023
+Python threading module: Disponível em: https://docs.python.org/3/library/threading.html. Acesso em: 20 de out. de 2023.
+Algoritmos Distribuídos: Disponível em: https://www-di.inf.puc-rio.br/~endler/courses/DA/transp/D-Algos.PDF. Acesso em: 02 de fev. de 2024.
