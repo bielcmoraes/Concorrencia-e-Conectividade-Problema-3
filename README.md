@@ -102,5 +102,5 @@ Todos os principais requisitos foram cumpridos de maneira eficiente, em especial
 Pensando em possíveis melhorias, é interessante que, posteriormente, o sistema de criptografia seja atualizado com a implementação de criptografia de chave pública-privada ou com outra forma mais segura porém igualmente eficaz. Também cogitou-se a busca por algoritmos mais complexos e robustos que solucionassem o problema, visto que a solução adotada tem como desvantagem o alto fluxo de pacotes na rede e uma possível sobrecarga do sistema a depender da quantidade de pares ativos e da quantidade de mensagens trocadas. Acredita-se que com essas simples melhorias a segurança do sistema como um todo melhore bastante junto à solidez e capacidade de envio e recebimento de mensagens.
 
 # Referências
-Python threading module: Disponível em: https://docs.python.org/3/library/threading.html. Acesso em: 20 de out. de 2023.
-Algoritmos Distribuídos: Disponível em: https://www-di.inf.puc-rio.br/~endler/courses/DA/transp/D-Algos.PDF. Acesso em: 02 de fev. de 2024.
+  * Python threading module: Disponível em: https://docs.python.org/3/library/threading.html. Acesso em: 20 de out. de 2023.
+  * Algoritmos Distribuídos: Disponível em: https://www-di.inf.puc-rio.br/~endler/courses/DA/transp/D-Algos.PDF. Acesso em: 02 de fev. de 2024.
