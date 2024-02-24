@@ -1,6 +1,6 @@
 <div align="center">
   <h1>
-      Relatório do problema 2: ZapsZap
+      Relatório do problema 3: ZapsZap Release Candidate
   </h1>
 
   <h3>
@@ -21,9 +21,11 @@
 
 Os aplicativos de mensagens desempenham um papel fundamental no ambiente corporativo, transformando a forma como as organizações se comunicam e colaboram. Em um mundo empresarial cada vez mais dinâmico e globalizado, a capacidade de trocar informações de maneira rápida e eficiente é crucial para o sucesso de qualquer empreendimento. Os aplicativos de mensagens oferecem uma plataforma instantânea para a comunicação, quebrando as barreiras de tempo e espaço, permitindo que equipes se conectem instantaneamente, independentemente da localização geográfica.
 
-Diante desse cenário, uma startup decidiu desenvolver um novo software de mensagens instantâneas voltado para o mercado corporativo e baseado no modelo peer-to-peer (P2P). O protótipo dessa solução deve oferecer um serviço descentralizado, sem uso de servidor central e que permita a troca de mensagens de texto entre grupos de usuários de uma empresa. Além de garantir a comunicação segura através de chaves criptográficas.
+No problema 2, uma startup decidiu desenvolver um novo software de mensagens instantâneas voltado para o mercado corporativo e baseado no modelo peer-to-peer (P2P). O protótipo dessa solução deve oferecer um serviço descentralizado, sem uso de servidor central e que permita a troca de mensagens de texto entre grupos de usuários de uma empresa. Além de garantir a comunicação segura através de chaves criptográficas.
 
 O produto em forma de software foi desenvolvido utilizando a linguagem de programação Python na versão 3.11, além das bibliotecas fornecidas pelo própio pacote da linguagem, entre elas: socket, threading, queue, time, os, entre outras. Por fim, o software foi buildado em container Docker para garantir a estabilidade e praticidade. O conjunto de escolhas e decisões tomadas neste projeto resultaram em um sistema simples, porém eficiente e capaz de atender às demandas e exigências principais da startup contratante.
+
+Embora o protótipo da solução anterior tenha obtido relativo sucesso, o desafio para desenvolver um novo software de mensagens instantâneas baseado no modelo P2P continua neste problema. Um ponto que deve ser considerado nesta versão é que o sistema deve realmente prover um serviço confiável em que, se uma mensagem for exibida na interface de um determinado usuário, deve também ser exibida na interface dos outros usuários.
 
 # 2. Metodologia
 
@@ -33,27 +35,49 @@ A sincronização em sistemas distribuídos representa um elemento-chave para ga
 Diantes de algumas opções disponiveis para a implementação do relógio lógico, o algoritmo de Lamporte foi o escolhido pois este relógio lógico não se baseia em tempo absoluto, mas sim em uma contagem local de eventos ocorridos em cada processo. Cada evento é marcado com um carimbo de tempo lógico, representando a relação causal entre eventos em diferentes nodos. Assim, a ordenação das mensagens se deu por meio do timestamp do relógio combinado com o endereço IP do remetente da mensagem.
 
 ### 2.2 - Pacotes
-Para que o sistema funcionasse de forma adequada, 2 tipos de pacotes foram estabelecidos:
+Para que o sistema funcionasse de forma adequada, 6 tipos de pacotes foram estabelecidos:
 
-1. **Pacote de mensagem**: { "message_type": "Message", "message_id": [ip_sender, current_timestamp], "text": ‘ ’ }
+1. **Pacote de mensagem**: { "message_type": "Message", "message_id": [ip_sender, current_timestamp], "text": ‘ ’, "ack_requested": Boolean }
 
    * message_type: string que identifica o tipo de pacote.
    * message_id: lista com o endereço IP do remetente da mensagem e o timestamp atual responsavel por identificar unicamente o pacote.
    * text: texto da mensagem que foi enviada. (Área de dados do pacote)
+   * ack_requested: Booleano indicando se a mensagem precisa d confirmação.
 
-2. **Solicitação de sincronização**: { "message_type": "Sync", "message_id": [ip_sender, current_timestamp], "text": "Start sync." }
+2. **Solicitação de sincronização**: { "message_type": "Sync", "message_id": [ip_sender, current_timestamp] }
 
    * message_type: string que identifica o tipo de pacote.
    * message_id: lista com o endereço IP do remetente da mensagem e o timestamp atual responsavel por identificar unicamente o pacote.
    * text: texto informando que é uma solicitação de sincronização. (Área de dados do pacote)
+
+3. **Verificação de pares ativos**: { "message_type": "Ping", "id": str(uuid.uuid4()) }
+
+  * message_type: string que identifica o tipo de pacote.
+  * message_id: Identificador Único Universal (uuid) que identifica unicamente esse tipo de pacote.
+    
+4. **Resposta a verificação de pares ativos**: { "message_type": "Pong", "id": message_data["id"] }
+  
+  * message_type: string que identifica o tipo de pacote.
+  * message_id: Uuid igual ao id do pacote do tipo "Pong".
+
+5. **Confirmação de recebimento de mensagem**: { "message_type": "Ack", "message_id": message_id }
+
+  * message_type: string que identifica o tipo de pacote.
+  * message_id: lista com o endereço IP do remetente da mensagem e o timestamp atual responsavel por identificar unicamente o pacote e igual ao da mensagem recebida.
+
+6. **Confirmação de exibição de mensagem**:  { "message_type": "Confirmed", "message_id": message_id }
+   * message_type: string que identifica o tipo de pacote.
+   * message_id: lista com o endereço IP do remetente da mensagem e o timestamp atual responsavel por identificar unicamente o pacote e igual ao da mensagem enviada.
    
 
 ### 2.3 - Threads
-A aplicação foi contruída com base na operação de três Threads distintas, além da Thread principal, cada uma desempenhando um papel específico ao longo de toda a execução do sistema:
+A aplicação foi contruída com base na operação de cinco Threads distintas, além da Thread principal, cada uma desempenhando um papel específico ao longo de toda a execução do sistema:
 
 1. **receive_messages**: Tem a função primordial de receber todos os pacotes que chegam, adicionando-os a uma fila para processamento posterior.
 2. **order_packages**: Opera em paralelo, porém em conjunto com a Thread `receive_messages`, sendo responsável por tratar os pacotes da fila, garantindo que todos os pacotes sejam processados corretamente.
-3. **time_sync**: Por fim, a última Thread é responsável por realizar enviar o pacote de solicitação de sincronização a cada 5 segundos. Assim, reforçando de forma constante a troca de mensagens entre os usuários ativos e melhorando a experiência de utilização do software.
+3. **send_all_ping**: Responsável por enviar a todos os pares da lista de pares o pacote de verificação de pares ativos (Ping) a cada meio segundo.
+4. **check_status**: Opera em paralelo, porém em conjunto com a Thread `send_all_ping`, sendo responsável por verificar a cada 0.2 segundos quis foram os pares que responderam ao "Ping" e atualizar seus respectivos status.
+5. **remove_pending_messages**:  Opera em paralelo, porém em conjunto com a Thread `order_packages` e com a funcionalidade de enviar mensagens. Assim, sendo responsável por verificar se todos os pares ativos confirmaram o recebimento das mensagens, enviar a confirmação de exibição de mensagens e mover as mensagens confirmadas para a lista de exibição.
 
 ### 2.4 - Criptografia
 A estratégia criptografica adotada foi a de deslocamento de caracteres. Também conhecida como cifra de César, é uma técnica de criptografia clássica que opera deslocando cada caractere em uma mensagem por um número fixo de posições no alfabeto. Essa abordagem foi escolhida após a tentativa (sem sucesso) de implementação de criptografia utilizando chaves pública-privada.
