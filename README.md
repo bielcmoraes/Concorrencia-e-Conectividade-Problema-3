@@ -88,7 +88,7 @@ Ao implementar a cifra de César, o software ganhou em desempenho e simplicidade
 # 3. Resultados
 Ao iniciar o sistema, é solicitado do usuário o endereço IP da sua máquina na rede (nesta versão todos o protótipo "escuta" sempre na porta 5555). Em seguida, é possível acessar um menu interativo com cinco opções: [1] para enviar mensagens, [2] para visualizar as mensagens recebidas e [3] para acionar o bot de teste, [4] para salvar a lista de mensagem confirmadas em um arquivo em .txt e [5] para sair. Conforme a imagem abaixo:
 
-![Menu principal.](https://github.com/bielcmoraes/Concorrencia-e-Conectividade-Problema-2/blob/master/readme_images/menu_principal.png)
+![Menu principal.](https://github.com/bielcmoraes/Concorrencia-e-Conectividade-Problema-3/blob/main/readme_images/menu_principal.png)
 
 É importante salientar que as funcionalidades de sincronização incial do sistema (a sincronização inicial é capaz de atualizar o timestamp do relógio lógico e recuperar as mensagens trocadas enquanto o usuário estivesse offline, desde que pelo menos um dos pares permanecesse ativo) e criptografia foram mantidas. Houve a implementação de um algoritmo de comunicação confiável (reliable muticast) baseado em Acknowledgement (Ack), um sistema para a verificação de pares ativos (online), a criação de um bot para envio de varias mensagens de maneira simultânea e implementação de uma funcionalidade que salva a lista de mensagens exibidas/pacotes em um arquivo do tipo txt.
 
