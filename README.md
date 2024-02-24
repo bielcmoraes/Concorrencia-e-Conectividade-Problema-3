@@ -61,13 +61,12 @@ Para que o sistema funcionasse de forma adequada, 6 tipos de pacotes foram estab
   * message_id: Uuid igual ao id do pacote do tipo "Pong".
 
 5. **Confirmação de recebimento de mensagem**: { "message_type": "Ack", "message_id": message_id }
-
   * message_type: string que identifica o tipo de pacote.
   * message_id: lista com o endereço IP do remetente da mensagem e o timestamp atual responsavel por identificar unicamente o pacote e igual ao da mensagem recebida.
 
 6. **Confirmação de exibição de mensagem**:  { "message_type": "Confirmed", "message_id": message_id }
-   * message_type: string que identifica o tipo de pacote.
-   * message_id: lista com o endereço IP do remetente da mensagem e o timestamp atual responsavel por identificar unicamente o pacote e igual ao da mensagem enviada.
+  * message_type: string que identifica o tipo de pacote.
+  * message_id: lista com o endereço IP do remetente da mensagem e o timestamp atual responsavel por identificar unicamente o pacote e igual ao da mensagem enviada.
    
 
 ### 2.3 - Threads
